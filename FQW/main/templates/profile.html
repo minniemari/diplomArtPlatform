@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль художника{% endblock %}
+
+{% block content %}
+<h2>Профиль художника</h2>
+<div class="row">
+    <div class="col-md-4">
+        <img src="{{ profile.user.profile.image.url }}" alt="Аватар" class="img-fluid rounded-circle">
+        <p><strong>Специализация:</strong> {{ profile.specialization }}</p>
+        <p><strong>Описание:</strong> {{ profile.description }}</p>
+        <p><strong>Рейтинг:</strong> {{ profile.ratings }}</p>
+    </div>
+    <div class="col-md-8">
+        <h3>Портфолио</h3>
+        <div class="row">
+            {% for portfolio in profile.portfolio_set.all %}
+            <div class="col-md-4 mb-3">
+                <img src="{{ portfolio.image.url }}" alt="Работа" class="img-fluid">
+            </div>
+            {% empty %}
+            <p>Нет работ в портфолио.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

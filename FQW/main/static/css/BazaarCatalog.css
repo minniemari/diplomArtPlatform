@@ -1,0 +1,54 @@
+/* Правый верхний угол */
+.budget-info {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    text-align: right;
+}
+
+.budget {
+    font-size: 1.2rem;
+    color: #007bff; /* Цвет бюджета */
+}
+
+.budget-info small.text-muted {
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+    display: block;
+}
+
+/* Общие стили карточки */
+.card {
+    position: relative; /* Для позиционирования budget-info */
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-height: 250px; /* Минимальная высота карточки */
+}
+
+.card-title {
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+}
+
+.card-text {
+    margin-bottom: 1rem;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.btn-primary {
+    width: 100%;
+    margin-top: auto; /* Кнопка всегда внизу карточки */
+}
+
+/* Отступы между карточками */
+.row-cols-1 > .col {
+    margin-bottom: 1.5rem;
+}

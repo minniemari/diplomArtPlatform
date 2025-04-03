@@ -1,0 +1,36 @@
+.card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+}
+
+.form-label {
+    font-weight: bold;
+}
+input {
+    border-radius: 8px;
+    padding: 10px;
+    width: calc(100% - 20px);
+}
+
+.input-group-text {
+    background-color: #fff;
+    border-color: #ced4da;
+}
+
+textarea {
+    border-radius: 8px;
+    padding: 10px;
+    width: calc(100% - 20px);
+}
+
+/* Стили для кнопки */
+.btn-primary {
+    background-color: #212529;
+    border-color: #212529;
+}
+
+.btn-primary:hover {
+    background-color: #1c1f23;
+    border-color: #1c1f23;
+}

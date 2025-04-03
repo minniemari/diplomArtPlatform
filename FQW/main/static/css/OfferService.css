@@ -1,0 +1,29 @@
+/* Стили для карточки */
+.card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.card-header {
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-body textarea {
+    resize: vertical; /* Разрешаем изменять высоту текстового поля */
+}
+
+.card-footer {
+    background-color: transparent;
+}
+.btn-primary a {
+    pointer-events: auto; /* Убедитесь, что клик разрешен */
+}
+
+textarea {
+    border-radius: 8px;
+    padding: 10px;
+    width: calc(100% - 20px);
+}

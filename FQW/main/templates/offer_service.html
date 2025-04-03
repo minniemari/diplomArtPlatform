@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <!-- Подключение дополнительных стилей -->
+    <link rel="stylesheet" href="{% static 'css/OfferService.css' %}">
+{% endblock %}
+
+{% block title %} Предложить услугу {% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Предложить услугу</h2>
+
+        <!-- Информация о заказе -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ bid.title }}</h5>
+                <p class="card-text">{{ bid.description }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small>Заказчик: {{ bid.user.username }}</small><br>
+                        <small>Тип: {{ bid.type.name }}</small>
+                    </div>
+                    <div>
+                        <strong>Бюджет до {{ bid.price }} ₽</strong>
+                        {% if bid.increasedPrice %}
+                            <small class="text-muted">(Готов рассмотреть стоимость выше)</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Форма предложения услуги -->
+        <form method="post">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Как вы будете решать задачу клиента</h5>
+                    <ol>
+                        <li>Убедитесь, что в вашем портфолио есть примеры выполнения похожей работы.</li>
+                        <li>Укажите, как именно вы собираетесь выполнять это задание. Опишите ключевые моменты.</li>
+                    </ol>
+                </div>
+                <div class="card-body">
+                    <!-- Описание -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+                        {{ form.description }}
+                    </div>
+
+                    <!-- Стоимость -->
+                    <div class="mb-3">
+                        <label for="{{ form.price.id_for_label }}" class="form-label">Стоимость</label>
+                        {{ form.price }}
+                    </div>
+
+                    <!-- Срок выполнения -->
+                    <div class="mb-3">
+                        <label for="{{ form.delivery_time.id_for_label }}" class="form-label">Срок выполнения</label>
+                        {{ form.delivery_time }}
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                    <button type="submit" class="btn btn-primary">Предложить</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

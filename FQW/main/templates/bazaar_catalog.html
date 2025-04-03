@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/BazaarCatalog.css' %}">
+{% endblock %}
+
+{% block title %} Каталог биржи {% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Каталог биржи</h2>
+
+        <!-- Фильтры -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label for="typeFilter" class="form-label">Тип</label>
+                <select id="typeFilter" name="type" class="form-select">
+                    <option value="">Все типы</option>
+                    {% for type in types %}
+                        <option value="{{ type.id }}" {% if request.GET.type == type.id|stringformat:"s" %}selected{% endif %}>
+                            {{ type.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="priceFilter" class="form-label">Максимальная стоимость</label>
+                <input type="number" id="priceFilter" name="price" class="form-control" placeholder="Максимальная цена" value="{{ request.GET.price }}">
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
+            </div>
+            <div class="col-md-3 align-self-end">
+                <label for="sortFilter" class="form-label">Отсортировать по:</label>
+                <select id="sortFilter" name="sort" class="form-select">
+                    <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Цене (по возрастанию)</option>
+                    <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Цене (по убыванию)</option>
+                </select>
+            </div>
+        </form>
+
+        <!-- Заказы -->
+        <div class="row row-cols-1 g-4">
+            {% for bid in bids %}
+               <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <!-- Бюджет и готовность к повышению цены -->
+                            <div class="budget-info text-end">
+                                <strong class="budget">Бюджет до {{ bid.price }} ₽</strong>
+                                {% if bid.increasedPrice %}
+                                    <small class="text-muted d-block">Готов рассмотреть стоимость выше</small>
+                                {% endif %}
+                            </div>
+
+                            <!-- Основная информация -->
+                            <h5 class="card-title">{{ bid.title }}</h5>
+                            <p class="card-text">{{ bid.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small>Заказчик: {{ bid.user.username }}</small><br>
+                                    <small>Тип: {{ bid.type.name }}</small>
+                                </div>
+                            </div>
+                           <button type="button" class="btn btn-primary mt-3">
+                                <a href="{% url 'offer_service' bid.id %}" style="color: white; text-decoration: none;">Предложить услугу</a>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col text-center">
+                    <p>Заказов пока нет.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Пагинация -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mt-4">
+                {% if bids.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ bids.previous_page_number }}">Предыдущая</a></li>
+                {% endif %}
+                {% for i in bids.paginator.page_range %}
+                    <li class="page-item {% if bids.number == i %}active{% endif %}">
+                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    </li>
+                {% endfor %}
+                {% if bids.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ bids.next_page_number }}">Следующая</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ bids.paginator.num_pages }}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+{% endblock %}

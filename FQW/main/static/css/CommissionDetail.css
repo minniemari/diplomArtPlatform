@@ -1,0 +1,48 @@
+.image-container {
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+
+.placeholder-image {
+    background-color: #f8f9fa;
+    padding: 50px 0;
+    text-align: center;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+.card-body button {
+    margin-bottom: 1rem;
+}
+
+.bi-star-fill {
+    font-size: 1rem;
+}
+/* Круглое изображение профиля */
+.profile-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для панели с пакетами */
+.card-header-tabs .nav-link {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.card-header-tabs .nav-link.active {
+    background-color: #f8f9fa;
+    color: #000;
+    font-weight: bold;
+}
+
+.card-body button {
+    margin-bottom: 1rem;
+}

@@ -1,0 +1,35 @@
+/* Стили для формы */
+.card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+}
+
+.card-img-top {
+    height: 200px; /* Установите высоту изображения */
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+.card-title {
+    font-weight: bold;
+}
+
+.card-text {
+    color: #6c757d;
+}
+
+/* Стили для пагинации */
+.pagination .page-link {
+    background-color: #fff;
+    border-color: #ced4da;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}

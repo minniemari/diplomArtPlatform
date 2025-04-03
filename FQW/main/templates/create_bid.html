@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <!-- Подключение дополнительных стилей -->
+    <link rel="stylesheet" href="{% static 'css/CreateBid.css' %}">
+{% endblock %}
+
+{% block title %} Создание заказа на бирже {% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Создание заказа на бирже</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="card p-4 mb-3">
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">Название задачи</label>
+                    {{ form.title }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Детальное описание задачи</label>
+                    <small class="text-muted">Опишите, что именно вам нужно, в каком объеме и за какой срок</small>
+                    {{ form.description }}
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.file.id_for_label }}" class="form-label">Прикрепить файлы</label>
+                    <small class="text-muted">до 10 файлов не более 100 МБ</small>
+                    {{ form.file }}
+                </div>
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.type.id_for_label }}" class="form-label">Тип</label>
+                        {{ form.type }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.price.id_for_label }}" class="form-label">Бюджет</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₽</span>
+                            {{ form.price }}
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="{{ form.increasedPrice.id_for_label }}" name="{{ form.increasedPrice.html_name }}">
+                    <label class="form-check-label" for="{{ form.increasedPrice.id_for_label }}">Готов рассмотреть предложения с ценой выше, если уровень исполнителя будет выше</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Разместить</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

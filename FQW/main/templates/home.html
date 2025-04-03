@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+<h2>Доступные коммишены</h2>
+<div class="row">
+    {% for commission in commissions %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="{{ commission.image.url }}" class="card-img-top" alt="Коммисшен">
+            <div class="card-body">
+                <h5 class="card-title">{{ commission.title }}</h5>
+                <p class="card-text">{{ commission.description|truncatechars:50 }}</p>
+                <a href="{% url 'commission_detail' commission.id %}" class="btn btn-primary">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>Нет доступных коммишенов.</p>
+    {% endfor %}
+</div>
+{% endblock %}

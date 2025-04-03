@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <!-- Подключение дополнительных стилей -->
+    <link rel="stylesheet" href="{% static 'css/CommissionDetail.css' %}">
+{% endblock %}
+
+{% block title %} Коммишка: {{ commission.title }} {% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Изображение коммишки -->
+                <div class="image-container mb-3">
+                    {% if commission.image %}
+                        <img src="{{ commission.image.url }}" alt="{{ commission.title }}" class="img-fluid rounded">
+                    {% else %}
+                        <div class="placeholder-image text-center">
+                            <p>Изображение отсутствует</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Описание коммишки -->
+                <h4>{{ commission.title }}</h4>
+                <p><strong>Описание коммишки</strong></p>
+                <p>{{ commission.description }}</p>
+
+                <p><strong>Нужно для заказа</strong></p>
+                <ul>
+                    <li>Описать идею для иллюстрации/персонажа (внешность, поза, эмоции, фон)</li>
+                    <li>Указать желаемую атмосферу, цветовую гамму</li>
+                    <li>Предоставить референсы (желательно)</li>
+                </ul>
+            </div>
+
+            <div class="col-md-6">
+                <!-- Панель с ценами и опциями -->
+                <div class="card bg-light">
+                    <div class="card-header">
+                        <ul class="nav nav-pills card-header-tabs" id="package-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-package="basic" href="#">Базовый</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-package="standard" href="#">Стандартный</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-package="premium" href="#">Премиум</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <h1 class="mb-3" id="package-price">{{ basic_option.price }} ₽</h1>
+                        <p class="mb-3" id="package-description">Краткое описание</p>
+                        <ul class="list-unstyled" id="package-details">
+                            <li><span id="package-deadline">{{ basic_option.deadline }}</span> дней</li>
+                            <li><span id="package-amount">{{ basic_option.amount }}</span> объектов</li>
+                            <li>{% if basic_option.for_print %}Для печати{% else %}Не для печати{% endif %}</li>
+                            <li>{% if basic_option.details %}Проработка деталей{% else %}Без проработки деталей{% endif %}</li>
+                            <li>Правки не ограничены</li>
+                        </ul>
+                        <button type="button" class="btn btn-secondary w-100 mb-3">
+                            <a href="{% url 'order_form' commission.id %}" style="color: white; text-decoration: none;">Заказать</a>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#messageModal"><i class="bi bi-envelope"></i> Связаться со мной</button>
+                        <div class="d-flex align-items-center mt-3">
+                            <img src="{{ user.profile.image.url }}" alt="{{ user.username }}" class="rounded-circle me-2 profile-image">
+                            <div>
+                                <p class="mb-0">{{ user.username }}</p>
+                                <small class="text-muted">Рейтинг: {{ user.profile.ratings }} <i class="bi bi-star-fill text-warning"></i></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+ <!-- Модальное окно для отправки сообщений -->
+    {% include 'message_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Подключение скрипта для переключения пакетов -->
+    <script src="{% static 'js/package_switcher.js' %}"></script>
+{% endblock %}
