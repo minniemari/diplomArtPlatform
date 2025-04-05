@@ -1,211 +1,227 @@
-{% extends 'base.html' %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание коммишена</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Создание коммишена</h2>
 
-{% block extra_css %}
-    <!-- Подключение дополнительных стилей -->
-    <link rel="stylesheet" href="{% static 'css/CreateCommission.css' %}">
-{% endblock %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
 
-
-{% block title %} Создание коммишена {% endblock %}
-{% block content %}
-<div class="container mt-5">
-    <h2> Создание коммишена </h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <!-- Основное -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title"> Основное </h5>
-                <div class="mb-3">
-                    <label for="{{ form.title.id_for_label }}" class="form-label"> Название </label>
-                    {{ form.title }}
-                </div>
-                <div class="mb-3">
-                    <label for="{{ form.type.id_for_label }}" class="form-label"> Тип </label>
-                    {{ form.type }}
-                </div>
-                <div class="mb-3">
-                    <label for="{{ form.image.id_for_label }}" class="form-label"> Обложка коммишена </label>
-                    <div id="cover-upload" class="image-upload-container rounded">
-                        {% if form.instance.image %}
-                            <img src="{{ form.instance.image.url }}" alt="Обложка" class="image-preview">
-                        {% else %}
-                            <div class="image-placeholder text-center">
-                                <p> Загрузить обложку <br><small>Форматы: jpg, jpeg, png</small></p>
-                            </div>
+            <!-- Основное -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Основное</h5>
+                    <div class="mb-3">
+                        <label for="{{ commission_form.title.id_for_label }}" class="form-label">Название</label>
+                        {{ commission_form.title }}
+                        {% if commission_form.title.errors %}
+                            <div class="text-danger">{{ commission_form.title.errors }}</div>
                         {% endif %}
-                        {{ form.image }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ commission_form.type.id_for_label }}" class="form-label">Тип</label>
+                        {{ commission_form.type }}
+                        {% if commission_form.type.errors %}
+                            <div class="text-danger">{{ commission_form.type.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ commission_form.image.id_for_label }}" class="form-label">Обложка коммишена</label>
+                        {{ commission_form.image }}
+                        <small class="text-muted">Загрузить обложку (форматы: jpg, jpeg, png)</small>
+                        {% if commission_form.image.errors %}
+                            <div class="text-danger">{{ commission_form.image.errors }}</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Описание и файлы -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title"> Описание и файлы </h5>
-                <div class="mb-3">
-                    <label for="{{ form.description.id_for_label }}" class="form-label"> Описание </label>
-                    {{ form.description }}
-                </div>
-                <div class="mb-3">
-                    <label for="{{ form.needsForOrder.id_for_label }}" class="form-label"> От покупателя нужно </label>
-                    {{ form.needsForOrder }}
-                </div>
-                <div class="mb-3">
-                    <button type="button" class="btn btn-secondary"> Прикрепить файлы </button>
-                    <small class="text-muted float-end"> до 10 файлов не более 100 МБ </small>
+            <!-- Описание и файлы -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Описание и файлы</h5>
+                    <div class="mb-3">
+                        <label for="{{ commission_form.description.id_for_label }}" class="form-label">Описание</label>
+                        {{ commission_form.description }}
+                        {% if commission_form.description.errors %}
+                            <div class="text-danger">{{ commission_form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ commission_form.needsForOrder.id_for_label }}" class="form-label">От покупателя нужно</label>
+                        {{ commission_form.needsForOrder }}
+                        <button type="button" class="btn btn-sm btn-primary">Прикрепить файлы</button>
+                        <small class="text-muted">до 10 файлов не более 100 МБ</small>
+                        {% if commission_form.needsForOrder.errors %}
+                            <div class="text-danger">{{ commission_form.needsForOrder.errors }}</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Стоимость и опции -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title"> Стоимость и опции </h5>
-                <div class="mb-3 d-flex justify-content-between align-items-center">
-                    <span> 1 пакет </span>
+            <!-- Стоимость и опции -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Стоимость и опции</h5>
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="packageSwitch">
-                        <label class="form-check-label" for="packageSwitch">
-                            <span id="switch-label"> 3 пакета </span>
-                        </label>
+                        <input class="form-check-input" type="checkbox" id="package-switch">
+                        <label class="form-check-label" for="package-switch">1 пакет <span class="badge bg-secondary">3 пакета</span></label>
                     </div>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Краткое описание</th>
+                                <th>ЭКОНОМ</th>
+                                <th>СТАНДАРТ</th>
+                                <th>БИЗНЕС</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Тип пакета</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.package_type }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Скетч</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.is_sketch }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Для печати</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.for_print }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Прорисовка окружающих</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.difficult_bg }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Персонаж в полный рост</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.full_height }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Проработка деталей</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.details }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Исходник в векторе</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.vector }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Исходник в psd</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.psd }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Количество объектов</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.amount }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Срок выполнения</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.deadline }}</td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Цена</td>
+                                {% for form in option_forms %}
+                                    <td>{{ form.price }}</td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th> Краткое описание </th>
-                            <th> Эконом </th>
-                            <th> Стандарт </th>
-                            <th> Бизнес </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td> Скетч </td>
-                            <td>{{ form.is_sketch }}</td>
-                            <td>{{ form.is_sketch }}</td>
-                            <td>{{ form.is_sketch }}</td>
-                        </tr>
-                        <tr>
-                            <td> Для печати </td>
-                            <td>{{ form.for_print }}</td>
-                            <td>{{ form.for_print }}</td>
-                            <td>{{ form.for_print }}</td>
-                        </tr>
-                        <tr>
-                            <td> Проработка окружающего </td>
-                            <td>{{ form.difficult_bg }}</td>
-                            <td>{{ form.difficult_bg }}</td>
-                            <td>{{ form.difficult_bg }}</td>
-                        </tr>
-                        <tr>
-                            <td> Персонаж в полный рост </td>
-                            <td>{{ form.full_height }}</td>
-                            <td>{{ form.full_height }}</td>
-                            <td>{{ form.full_height }}</td>
-                        </tr>
-                        <tr>
-                            <td> Проработка деталей </td>
-                            <td>{{ form.details }}</td>
-                            <td>{{ form.details }}</td>
-                            <td>{{ form.details }}</td>
-                        </tr>
-                        <tr>
-                            <td> Исходник в векторе </td>
-                            <td>{{ form.vector }}</td>
-                            <td>{{ form.vector }}</td>
-                            <td>{{ form.vector }}</td>
-                        </tr>
-                        <tr>
-                            <td> Исходник в PSD </td>
-                            <td>{{ form.psd }}</td>
-                            <td>{{ form.psd }}</td>
-                            <td>{{ form.psd }}</td>
-                        </tr>
-                        <tr>
-                            <td> Количество объектов </td>
-                            <td>{{ form.amount }}</td>
-                            <td>{{ form.amount }}</td>
-                            <td>{{ form.amount }}</td>
-                        </tr>
-                        <tr>
-                            <td> Срок выполнения </td>
-                            <td>{{ form.deadline }}</td>
-                            <td>{{ form.deadline }}</td>
-                            <td>{{ form.deadline }}</td>
-                        </tr>
-                        <tr>
-                            <td> Цена </td>
-                            <td>{{ form.price }}</td>
-                            <td>{{ form.price }}</td>
-                            <td>{{ form.price }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+            </div>
 
-                <!-- Дополнительные опции -->
-                <div class="mb-3">
-                    <h6> Дополнительные опции </h6>
-                    <div class="additional-options-container">
-                        <div class="additional-option mb-3">
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Название опции" name="additional_option_name">
-                                <input type="number" class="form-control" placeholder="80 ₽" name="additional_option_price">
-                                <input type="number" class="form-control" placeholder="0 дней" name="additional_option_deadline">
+            <!-- Дополнительные опции -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Дополнительные опции</h5>
+                    <div class="mb-3">
+                        <label for="{{ bonus_option_form.name.id_for_label }}" class="form-label">Название опции</label>
+                        {{ bonus_option_form.name }}
+                        {% if bonus_option_form.name.errors %}
+                            <div class="text-danger">{{ bonus_option_form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ bonus_option_form.price.id_for_label }}" class="form-label">Цена</label>
+                        {{ bonus_option_form.price }}
+                        {% if bonus_option_form.price.errors %}
+                            <div class="text-danger">{{ bonus_option_form.price.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ bonus_option_form.deadline.id_for_label }}" class="form-label">Срок</label>
+                        {{ bonus_option_form.deadline }}
+                        {% if bonus_option_form.deadline.errors %}
+                            <div class="text-danger">{{ bonus_option_form.deadline.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ bonus_option_form.description.id_for_label }}" class="form-label">Подсказка для покупателя</label>
+                        {{ bonus_option_form.description }}
+                        {% if bonus_option_form.description.errors %}
+                            <div class="text-danger">{{ bonus_option_form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary">Добавить еще</button>
+                </div>
+            </div>
+
+            <!-- Портфолио -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Портфолио</h5>
+                    <p>Загрузите не менее 5 работ, чтобы привлечь покупателей</p>
+                    <div class="row">
+                        {% for form in portfolio_forms %}
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.image.id_for_label }}" class="form-label">Добавить работу</label>
+                                    {{ form.image }}
+                                    {% if form.image.errors %}
+                                        <div class="text-danger">{{ form.image.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
                             </div>
-                            <textarea class="form-control mt-2" rows="3" placeholder="Подсказка для покупателя (очень краткое описание опции)" name="additional_option_description"></textarea>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-primary mt-2" id="addOptionButton"> Добавить еще </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="row portfolio-buttons">
-            {% for i in "12345" %}
-                <div class="col-md-4 mb-3">
-                    <button type="button" class="btn btn-outline-secondary w-100 portfolio-button" data-bs-toggle="modal" data-bs-target="#uploadModal" data-index="{{ forloop.counter }}">
-                        <div class="portfolio-image-placeholder d-flex justify-content-center align-items-center">
-                            <p>Добавить работу</p>
-                        </div>
-                    </button>
-                </div>
-            {% endfor %}
-        </div>
-
-        <!-- Модальное окно для загрузки изображения -->
-        <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="uploadModalLabel">Загрузить изображение</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="imageUpload" class="form-label">Выберите изображение:</label>
-                            <input type="file" class="form-control" id="imageUpload">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                        <button type="button" class="btn btn-primary" id="uploadButton">Загрузить</button>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Кнопка отправки -->
-        <div class="d-grid gap-2 mt-4">
-            <button type="submit" class="btn btn-primary"> Опубликовать </button>
-        </div>
-    </form>
-</div>
-{% endblock %}
-{% block extra_js %}
-    <!-- Подключение дополнительных скриптов -->
-    <script src="{% static 'js/switch_package.js' %}"></script>
-{% endblock %}
+            <button type="submit" class="btn btn-primary">Опубликовать</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

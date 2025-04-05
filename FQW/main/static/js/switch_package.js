@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const rowGroups = Array.from(document.querySelectorAll('table tbody tr')).map(row => ({
         basic: row.querySelector('td:nth-child(2)'),
         standard: row.querySelector('td:nth-child(3)'),
-        premium: row.querySelector('td:nth-child(4)'),
+        premium: row.querySelector('td:nth-child(4)')
     }));
 
     // Начальное состояние - показываем только стандартный пакет
@@ -28,10 +28,15 @@ document.addEventListener('DOMContentLoaded', function () {
             basicColumn.style.display = '';
             standardColumn.style.display = '';
             premiumColumn.style.display = '';
+
+            // Включить все поля
             rowGroups.forEach(group => {
                 group.basic.style.display = '';
                 group.standard.style.display = '';
                 group.premium.style.display = '';
+                enableFields(group.basic);
+                enableFields(group.standard);
+                enableFields(group.premium);
             });
             switchLabel.textContent = '3 пакета';
         } else {
@@ -39,17 +44,38 @@ document.addEventListener('DOMContentLoaded', function () {
             basicColumn.style.display = 'none';
             standardColumn.style.display = '';
             premiumColumn.style.display = 'none';
+
+            // Отключить базовый и премиум пакеты
             rowGroups.forEach(group => {
                 group.basic.style.display = 'none';
                 group.standard.style.display = '';
                 group.premium.style.display = 'none';
+                disableFields(group.basic);
+                disableFields(group.premium);
             });
             switchLabel.textContent = '1 пакет (Стандартный)';
         }
     }
-});
 
-document.addEventListener('DOMContentLoaded', function () {
+    // Функция для включения полей
+    function enableFields(cell) {
+        const inputs = cell.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.disabled = false;
+            input.required = true;
+        });
+    }
+
+    // Функция для отключения полей
+    function disableFields(cell) {
+        const inputs = cell.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.disabled = true;
+            input.required = false;
+        });
+    }
+
+    // Добавление дополнительных опций
     const addOptionButton = document.getElementById('addOptionButton');
     const additionalOptionsContainer = document.querySelector('.additional-options-container');
 
@@ -66,72 +92,4 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         additionalOptionsContainer.insertAdjacentHTML('beforeend', newOption);
     });
-});
-document.addEventListener('DOMContentLoaded', function () {
-    const uploadButton = document.getElementById('uploadButton');
-    const imageInput = document.getElementById('imageUpload');
-    const modal = document.getElementById('uploadModal');
-
-    let selectedButton = null;
-
-    // Отслеживаем, какая кнопка была нажата
-    document.querySelectorAll('.portfolio-button').forEach(button => {
-        button.addEventListener('click', function () {
-            selectedButton = this;
-        });
-    });
-
-    // Обработчик загрузки изображения
-    uploadButton.addEventListener('click', function () {
-        const file = imageInput.files[0];
-        if (!file) {
-            alert('Выберите файл для загрузки.');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        fetch('/upload-portfolio/', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Устанавливаем изображение на кнопку
-                    const img = document.createElement('img');
-                    img.src = data.image_url;
-                    img.classList.add('portfolio-image');
-
-                    selectedButton.innerHTML = '';
-                    selectedButton.appendChild(img);
-
-                    // Закрываем модальное окно
-                    const bootstrapModal = bootstrap.Modal.getInstance(modal);
-                    bootstrapModal.hide();
-                } else {
-                    alert('Ошибка при загрузке файла.');
-                }
-            });
-    });
-
-    // Функция для получения CSRF-токена
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 });

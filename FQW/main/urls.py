@@ -25,7 +25,7 @@ urlpatterns = [
     path('bazaar/<int:bid_id>/offer/', views.offer_service, name='offer_service'),
     path('commission/<int:pk>/order/', views.order_form, name='order_form'),
     # path('upload-image/', views.upload_image, name='upload_image'),
-    path('upload-portfolio/', views.upload_portfolio_image, name='upload_portfolio'),
+    # path('upload-portfolio/', views.upload_portfolio_image, name='upload_portfolio'),
     path('commission_success/',views.commission_success, name='commission_success'),
 ]
 

@@ -7,27 +7,28 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
+from django.core.exceptions import ValidationError
 import os
 
-def upload_image(request):
-    if request.method == 'POST' and request.FILES.get('file'):
-        file = request.FILES['file']
-        file_path = default_storage.save(f'portfolio/{file.name}', file)
-        return JsonResponse({'success': True, 'file_url': default_storage.url(file_path)})
-    return JsonResponse({'success': False})
-
-@login_required
-def upload_portfolio_image(request):
-    if request.method == 'POST' and request.FILES.get('file'):
-        portfolio = Portfolio(user=request.user)
-        portfolio.image = request.FILES['file']
-        portfolio.save()
-        return JsonResponse({
-            'success': True,
-            'image_url': portfolio.image.url,
-            'id': portfolio.id
-        })
-    return JsonResponse({'success': False})
+# def upload_image(request):
+#     if request.method == 'POST' and request.FILES.get('file'):
+#         file = request.FILES['file']
+#         file_path = default_storage.save(f'portfolio/{file.name}', file)
+#         return JsonResponse({'success': True, 'file_url': default_storage.url(file_path)})
+#     return JsonResponse({'success': False})
+#
+# @login_required
+# def upload_portfolio_image(request):
+#     if request.method == 'POST' and request.FILES.get('file'):
+#         portfolio = Portfolio(user=request.user)
+#         portfolio.image = request.FILES['file']
+#         portfolio.save()
+#         return JsonResponse({
+#             'success': True,
+#             'image_url': portfolio.image.url,
+#             'id': portfolio.id
+#         })
+#     return JsonResponse({'success': False})
 
 def register(request):
     if request.method == 'POST':
@@ -57,28 +58,102 @@ def register(request):
 @login_required
 def create_commission(request):
     if request.method == 'POST':
-        form = CommissionForm(request.POST, request.FILES)
-        form.set_user(request.user)  # Установка текущего пользователя
-        if form.is_valid():
-            commission = form.save()
-            return redirect('commission_success', pk=commission.pk)
-    else:
-        form = CommissionForm()
+        commission_form = CommissionForm(request.POST, request.FILES)
+        option_forms = [OptionForm(request.POST, prefix=f'option-{i}') for i in range(3)]
+        bonus_option_form = BonusOptionForm(request.POST)
+        portfolio_forms = [PortfolioForm(request.POST, request.FILES, prefix=f'portfolio-{i}') for i in range(5)]
 
-    return render(request, 'create_commission.html', {'form': form})
+        # Validate all forms
+        if all([commission_form.is_valid(), all(form.is_valid() for form in option_forms), bonus_option_form.is_valid()]):
+            # Save Commission
+            commission = commission_form.save(commit=False)
+            commission.user = request.user
+            commission.save()
+
+            # Save Options
+            for form in option_forms:
+                option = form.save(commit=False)
+                option.commission = commission
+                option.save()
+
+            # Save Bonus Option
+            bonus_option = bonus_option_form.save(commit=False)
+            bonus_option.commission = commission
+            bonus_option.save()
+
+            # Save Portfolio
+            for form in portfolio_forms:
+                if form.is_valid():
+                    portfolio = form.save(commit=False)
+                    portfolio.user = request.user
+                    portfolio.save()
+
+            return redirect('commission_detail', commission.id)
+        else:
+            # Debug: Print form errors
+            print("Commission form errors:", commission_form.errors)
+            for i, form in enumerate(option_forms):
+                print(f"Option form {i} errors:", form.errors)
+            print("Bonus option form errors:", bonus_option_form.errors)
+
+    else:
+        commission_form = CommissionForm()
+        option_forms = [OptionForm(prefix=f'option-{i}') for i in range(3)]
+        bonus_option_form = BonusOptionForm()
+        portfolio_forms = [PortfolioForm(prefix=f'portfolio-{i}') for i in range(5)]
+
+    context = {
+        'commission_form': commission_form,
+        'option_forms': option_forms,
+        'bonus_option_form': bonus_option_form,
+        'portfolio_forms': portfolio_forms,
+    }
+    return render(request, 'create_commission.html', context)
 
 @login_required
-def upload_portfolio_image(request):
-    if request.method == 'POST' and request.FILES.get('file'):
-        portfolio = Portfolio(user=request.user)
-        portfolio.image = request.FILES['file']
-        portfolio.save()
-        return JsonResponse({
-            'success': True,
-            'image_url': portfolio.image.url,
-            'id': portfolio.id,
-        })
-    return JsonResponse({'success': False})
+def commission_detail(request, pk):
+    commission = get_object_or_404(Commission, id=pk)
+
+    # Handle missing options gracefully
+    basic_option = None
+    standard_option = None
+    premium_option = None
+
+    try:
+        basic_option = commission.options.get(package_type='BASIC')
+    except Option.DoesNotExist:
+        pass
+
+    try:
+        standard_option = commission.options.get(package_type='STANDARD')
+    except Option.DoesNotExist:
+        pass
+
+    try:
+        premium_option = commission.options.get(package_type='PREMIUM')
+    except Option.DoesNotExist:
+        pass
+
+    context = {
+        'commission': commission,
+        'basic_option': basic_option,
+        'standard_option': standard_option,
+        'premium_option': premium_option,
+    }
+    return render(request, 'commission_detail.html', context)
+
+# @login_required
+# def upload_portfolio_image(request):
+#     if request.method == 'POST' and request.FILES.get('file'):
+#         portfolio = Portfolio(user=request.user)
+#         portfolio.image = request.FILES['file']
+#         portfolio.save()
+#         return JsonResponse({
+#             'success': True,
+#             'image_url': portfolio.image.url,
+#             'id': portfolio.id,
+#         })
+#     return JsonResponse({'success': False})
 
 def commission_success(request):
     return render(request, 'commission_success.html')
@@ -87,23 +162,23 @@ def home(request):
     commissions = Commission.objects.all()
     return render(request, 'home.html', {'commissions': commissions})
 
-@login_required
-def commission_detail(request, pk):
-    commission = get_object_or_404(Commission, pk=pk)
-    artist = commission.user
-
-    # Получаем все пакеты
-    basic_option = commission.options.get(package_type='BASIC')
-    standard_option = commission.options.get(package_type='STANDARD')
-    premium_option = commission.options.get(package_type='PREMIUM')
-
-    return render(request, 'commission_detail.html', {
-        'commission': commission,
-        'artist': artist,
-        'basic_option': basic_option,
-        'standard_option': standard_option,
-        'premium_option': premium_option,
-    })
+# @login_required
+# def commission_detail(request, pk):
+#     commission = get_object_or_404(Commission, pk=pk)
+#     artist = commission.user
+#
+#     # Получаем все пакеты
+#     basic_option = commission.options.get(package_type='BASIC')
+#     standard_option = commission.options.get(package_type='STANDARD')
+#     premium_option = commission.options.get(package_type='PREMIUM')
+#
+#     return render(request, 'commission_detail.html', {
+#         'commission': commission,
+#         'artist': artist,
+#         'basic_option': basic_option,
+#         'standard_option': standard_option,
+#         'premium_option': premium_option,
+#     })
 
 @login_required
 def order_form(request, pk):
