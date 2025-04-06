@@ -59,62 +59,72 @@ def register(request):
 def create_commission(request):
     if request.method == 'POST':
         commission_form = CommissionForm(request.POST, request.FILES)
-        option_forms = [OptionForm(request.POST, prefix=f'option-{i}') for i in range(3)]
-        bonus_option_form = BonusOptionForm(request.POST)
-        portfolio_forms = [PortfolioForm(request.POST, request.FILES, prefix=f'portfolio-{i}') for i in range(5)]
+        option_forms = [OptionForm(request.POST, prefix=f"option-{i}") for i in range(3)]
+        bonus_option_formset = BonusOptionFormSet(request.POST, prefix="bonus", queryset=BonusOption.objects.none())
+        portfolio_forms = [PortfolioForm(request.POST, request.FILES, prefix=f"portfolio-{i}") for i in range(5)]
 
-        # Validate all forms
-        if all([commission_form.is_valid(), all(form.is_valid() for form in option_forms), bonus_option_form.is_valid()]):
-            # Save Commission
+        is_three_packages = request.POST.get('package-switch') == 'on'
+        active_forms = option_forms[:3] if is_three_packages else [option_forms[1]]
+        package_types = ['BASIC', 'STANDARD', 'PREMIUM'] if is_three_packages else ['STANDARD']
+
+        if commission_form.is_valid() and all(f.is_valid() for f in active_forms) and bonus_option_formset.is_valid():
             commission = commission_form.save(commit=False)
             commission.user = request.user
             commission.save()
 
-            # Save Options
-            for form in option_forms:
+            # Сохраняем опции пакетов и связываем с коммишкой
+            for i, form in enumerate(active_forms):
                 option = form.save(commit=False)
                 option.commission = commission
+                option.package_type = package_types[i]
                 option.save()
 
-            # Save Bonus Option
-            bonus_option = bonus_option_form.save(commit=False)
-            bonus_option.commission = commission
-            bonus_option.save()
+            # Сохраняем дополнительные опции и добавляем в M2M
+            for form in bonus_option_formset:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE'):
+                    bonus = form.save()
+                    commission.bonus_options.add(bonus)
 
-            # Save Portfolio
-            for form in portfolio_forms:
-                if form.is_valid():
+            # Сохраняем портфолио и связываем с коммишкой
+            for i, form in enumerate(portfolio_forms):
+                if form.is_valid() and form.cleaned_data.get('image'):
                     portfolio = form.save(commit=False)
                     portfolio.user = request.user
+                    portfolio.commission = commission
+                    portfolio.description = form.cleaned_data.get('description') or f"Коммишка «{commission.title}» - работа {i + 1}"
                     portfolio.save()
 
             return redirect('commission_detail', commission.id)
+
         else:
-            # Debug: Print form errors
             print("Commission form errors:", commission_form.errors)
             for i, form in enumerate(option_forms):
                 print(f"Option form {i} errors:", form.errors)
-            print("Bonus option form errors:", bonus_option_form.errors)
+            print("Bonus option formset errors:", bonus_option_formset.errors)
 
     else:
         commission_form = CommissionForm()
-        option_forms = [OptionForm(prefix=f'option-{i}') for i in range(3)]
-        bonus_option_form = BonusOptionForm()
-        portfolio_forms = [PortfolioForm(prefix=f'portfolio-{i}') for i in range(5)]
+        option_forms = [OptionForm(prefix=f"option-{i}") for i in range(3)]
+        bonus_option_formset = BonusOptionFormSet(queryset=BonusOption.objects.none(), prefix="bonus")
+        portfolio_forms = [PortfolioForm(prefix=f"portfolio-{i}") for i in range(5)]
 
-    context = {
+    commission = None
+    return render(request, 'create_commission.html', {
         'commission_form': commission_form,
         'option_forms': option_forms,
-        'bonus_option_form': bonus_option_form,
+        'bonus_option_formset': bonus_option_formset,
         'portfolio_forms': portfolio_forms,
-    }
-    return render(request, 'create_commission.html', context)
+        'commission': commission,
+    })
+
+
+
 
 @login_required
 def commission_detail(request, pk):
     commission = get_object_or_404(Commission, id=pk)
 
-    # Handle missing options gracefully
+    # Получаем пакеты
     basic_option = None
     standard_option = None
     premium_option = None
@@ -134,11 +144,15 @@ def commission_detail(request, pk):
     except Option.DoesNotExist:
         pass
 
+    # Получаем первые 5 изображений из портфолио
+    portfolios = commission.portfolio_works.all()[:5]
+
     context = {
         'commission': commission,
         'basic_option': basic_option,
         'standard_option': standard_option,
         'premium_option': premium_option,
+        'portfolios': portfolios,
     }
     return render(request, 'commission_detail.html', context)
 

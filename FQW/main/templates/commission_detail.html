@@ -1,88 +1,116 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block extra_css %}
-    <!-- Подключение дополнительных стилей -->
-    <link rel="stylesheet" href="{% static 'css/CommissionDetail.css' %}">
-{% endblock %}
-
-{% block title %} Коммишка: {{ commission.title }} {% endblock %}
-
 {% block content %}
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-6">
-                <!-- Изображение коммишки -->
-                <div class="image-container mb-3">
-                    {% if commission.image %}
-                        <img src="{{ commission.image.url }}" alt="{{ commission.title }}" class="img-fluid rounded">
-                    {% else %}
-                        <div class="placeholder-image text-center">
-                            <p>Изображение отсутствует</p>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- Описание коммишки -->
-                <h4>{{ commission.title }}</h4>
-                <p><strong>Описание коммишки</strong></p>
-                <p>{{ commission.description }}</p>
-
-                <p><strong>Нужно для заказа</strong></p>
-                <ul>
-                    <li>Описать идею для иллюстрации/персонажа (внешность, поза, эмоции, фон)</li>
-                    <li>Указать желаемую атмосферу, цветовую гамму</li>
-                    <li>Предоставить референсы (желательно)</li>
-                </ul>
-            </div>
-
-            <div class="col-md-6">
-                <!-- Панель с ценами и опциями -->
-                <div class="card bg-light">
-                    <div class="card-header">
-                        <ul class="nav nav-pills card-header-tabs" id="package-tabs">
-                            <li class="nav-item">
-                                <a class="nav-link active" data-package="basic" href="#">Базовый</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-package="standard" href="#">Стандартный</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-package="premium" href="#">Премиум</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-body">
-                        <h1 class="mb-3" id="package-price">{{ basic_option.price }} ₽</h1>
-                        <p class="mb-3" id="package-description">Краткое описание</p>
-                        <ul class="list-unstyled" id="package-details">
-                            <li><span id="package-deadline">{{ basic_option.deadline }}</span> дней</li>
-                            <li><span id="package-amount">{{ basic_option.amount }}</span> объектов</li>
-                            <li>{% if basic_option.for_print %}Для печати{% else %}Не для печати{% endif %}</li>
-                            <li>{% if basic_option.details %}Проработка деталей{% else %}Без проработки деталей{% endif %}</li>
-                            <li>Правки не ограничены</li>
-                        </ul>
-                        <button type="button" class="btn btn-secondary w-100 mb-3">
-                            <a href="{% url 'order_form' commission.id %}" style="color: white; text-decoration: none;">Заказать</a>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#messageModal"><i class="bi bi-envelope"></i> Связаться со мной</button>
-                        <div class="d-flex align-items-center mt-3">
-                            <img src="{{ user.profile.image.url }}" alt="{{ user.username }}" class="rounded-circle me-2 profile-image">
-                            <div>
-                                <p class="mb-0">{{ user.username }}</p>
-                                <small class="text-muted">Рейтинг: {{ user.profile.ratings }} <i class="bi bi-star-fill text-warning"></i></small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container mt-4">
+  <div class="row">
+    <!-- Left side: images and description -->
+    <div class="col-md-8">
+      <!-- Carousel -->
+      <div id="commissionCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          <!-- Commission cover image -->
+          <div class="carousel-item active">
+            <img src="{{ commission.image.url }}" class="d-block w-100 rounded" alt="Commission Cover">
+          </div>
+          <!-- Portfolio images -->
+          {% for item in portfolios %}
+          <div class="carousel-item">
+            <img src="{{ item.image.url }}" class="d-block w-100 rounded" alt="Portfolio Image">
+          </div>
+          {% endfor %}
         </div>
-    </div>
- <!-- Модальное окно для отправки сообщений -->
-    {% include 'message_modal.html' %}
-{% endblock %}
+        <button class="carousel-control-prev" type="button" data-bs-target="#commissionCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#commissionCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
 
-{% block extra_js %}
-    <!-- Подключение скрипта для переключения пакетов -->
-    <script src="{% static 'js/package_switcher.js' %}"></script>
+      <!-- Title and Description -->
+      <h2>{{ commission.title }}</h2>
+      <p>{{ commission.description }}</p>
+
+      <!-- Requirements -->
+      <h5>Что нужно для заказа:</h5>
+      <p>{{ commission.needsForOrder }}</p>
+    </div>
+
+    <!-- Right side: options and profile -->
+    <div class="col-md-4">
+      <!-- Pricing Tabs -->
+      <ul class="nav nav-tabs" id="optionTabs" role="tablist">
+        {% if basic_option %}<li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tab-basic" data-bs-toggle="tab" data-bs-target="#option-basic" type="button" role="tab">Базовый</button>
+        </li>{% endif %}
+        {% if standard_option %}<li class="nav-item" role="presentation">
+          <button class="nav-link {% if not basic_option %}active{% endif %}" id="tab-standard" data-bs-toggle="tab" data-bs-target="#option-standard" type="button" role="tab">Стандартный</button>
+        </li>{% endif %}
+        {% if premium_option %}<li class="nav-item" role="presentation">
+          <button class="nav-link {% if not basic_option and not standard_option %}active{% endif %}" id="tab-premium" data-bs-toggle="tab" data-bs-target="#option-premium" type="button" role="tab">Премиум</button>
+        </li>{% endif %}
+      </ul>
+      <div class="tab-content border border-top-0 p-3">
+        {% if basic_option %}
+        <div class="tab-pane fade show active" id="option-basic" role="tabpanel">
+          <h4>{{ basic_option.price }} ₽</h4>
+          <p>{{ basic_option.description }}</p>
+          <ul class="list-unstyled">
+            <li>Срок выполнения: {{ basic_option.deadline }} дней</li>
+            <li>Количество персонажей: {{ basic_option.amount }}</li>
+            {% if basic_option.for_print %}<li>Подходит для печати</li>{% endif %}
+            {% if basic_option.details %}<li>Проработка деталей</li>{% endif %}
+            <li>Правки: Неограниченные</li>
+          </ul>
+          <a href="#" class="btn btn-primary w-100">Заказать</a>
+        </div>
+        {% endif %}
+
+        {% if standard_option %}
+        <div class="tab-pane fade {% if not basic_option %}show active{% endif %}" id="option-standard" role="tabpanel">
+          <h4>{{ standard_option.price }} ₽</h4>
+          <p>{{ standard_option.description }}</p>
+          <ul class="list-unstyled">
+            <li>Срок выполнения: {{ standard_option.deadline }} дней</li>
+            <li>Количество персонажей: {{ standard_option.amount }}</li>
+            {% if standard_option.for_print %}<li>Подходит для печати</li>{% endif %}
+            {% if standard_option.details %}<li>Проработка деталей</li>{% endif %}
+            <li>Правки: Неограниченные</li>
+          </ul>
+          <a href="#" class="btn btn-primary w-100">Заказать</a>
+        </div>
+        {% endif %}
+
+        {% if premium_option %}
+        <div class="tab-pane fade {% if not basic_option and not standard_option %}show active{% endif %}" id="option-premium" role="tabpanel">
+          <h4>{{ premium_option.price }} ₽</h4>
+          <p>{{ premium_option.description }}</p>
+          <ul class="list-unstyled">
+            <li>Срок выполнения: {{ premium_option.deadline }} дней</li>
+            <li>Количество персонажей: {{ premium_option.amount }}</li>
+            {% if premium_option.for_print %}<li>Подходит для печати</li>{% endif %}
+            {% if premium_option.details %}<li>Проработка деталей</li>{% endif %}
+            <li>Правки: Неограниченные</li>
+          </ul>
+          <a href="#" class="btn btn-primary w-100">Заказать</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Author Info -->
+      <div class="card mt-4 p-3">
+        <div class="d-flex align-items-center">
+          <img src="{{ commission.user.profile.image.url }}" alt="Avatar" class="rounded-circle me-3" width="60" height="60">
+          <div>
+            <h5 class="mb-0">{{ commission.user.profile.user.username }}</h5>
+            <small>Рейтинг: {{ commission.user.profile.ratings }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

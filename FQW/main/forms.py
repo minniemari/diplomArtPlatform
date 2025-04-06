@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import *
+from django.forms import modelformset_factory
 
 
 class RegisterForm(UserCreationForm):
@@ -28,6 +29,7 @@ class OptionForm(forms.ModelForm):
         model = Option
         fields = [
             'package_type',
+            'description',
             'is_sketch',
             'for_print',
             'difficult_bg',
@@ -40,15 +42,43 @@ class OptionForm(forms.ModelForm):
             'price',
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Скрываем поле commission
+        # self.fields['commission'].widget = forms.HiddenInput()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get('description'):
+            raise forms.ValidationError("Описание обязательно.")
+        if not cleaned_data.get('amount') or cleaned_data['amount'] <= 0:
+            raise forms.ValidationError("Количество объектов должно быть больше 0.")
+        if not cleaned_data.get('deadline') or cleaned_data['deadline'] <= 0:
+            raise forms.ValidationError("Срок выполнения должен быть больше 0.")
+        if not cleaned_data.get('price') or cleaned_data['price'] <= 0:
+            raise forms.ValidationError("Цена должна быть больше 0.")
+        return cleaned_data
+
 class BonusOptionForm(forms.ModelForm):
     class Meta:
         model = BonusOption
         fields = ['name', 'price', 'description', 'deadline']
 
+BonusOptionFormSet = modelformset_factory(
+    BonusOption,
+    form=BonusOptionForm,
+    extra=1,
+    can_delete=True
+)
+
 class PortfolioForm(forms.ModelForm):
     class Meta:
         model = Portfolio
         fields = ['image', 'description']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['description'].required = False
 
 class BirzhaForm(forms.ModelForm):
     class Meta:

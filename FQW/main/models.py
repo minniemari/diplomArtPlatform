@@ -26,6 +26,7 @@ class Portfolio(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='portfolio/')
     description = models.TextField()
+    commission = models.ForeignKey('Commission', on_delete=models.SET_NULL, null=True, blank=True, related_name='portfolio_works')
 
     def __str__(self):
         return f"Портфолио {self.user.username}"
@@ -37,7 +38,6 @@ class Commission(models.Model):
     type = models.ForeignKey('Type', on_delete=models.CASCADE)
     description = models.TextField()
     needsForOrder = models.TextField(default="Не указано")
-    options = models.ManyToManyField('Option',blank=True)
     image = models.ImageField(upload_to='commissions/')
     created_at = models.DateTimeField(auto_now_add=True)
     bonus_options = models.ManyToManyField('BonusOption', blank=True)
@@ -186,7 +186,11 @@ class Option(models.Model):
         ('STANDARD', 'Стандартный'),
         ('PREMIUM', 'Премиум'),
     ]
-
+    commission = models.ForeignKey(
+        'Commission',
+        on_delete=models.CASCADE,
+        related_name='options'
+    )
     package_type = models.CharField(max_length=10, choices=PACKAGE_CHOICES)  # Тип пакета
     description = models.TextField()
     is_sketch = models.BooleanField(default=False)

@@ -46,3 +46,33 @@
 .card-body button {
     margin-bottom: 1rem;
 }
+/* Стили для карусели */
+.carousel {
+    margin-bottom: 20px;
+}
+
+.carousel-inner .carousel-item.active,
+.carousel-inner .carousel-item-next,
+.carousel-inner .carousel-item-prev {
+    display: block;
+}
+
+.carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left),
+.carousel-inner .active.carousel-item-left {
+    transform: translateX(0);
+}
+
+.carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left),
+.carousel-inner .active.carousel-item-right {
+    transform: translateX(0);
+}
+
+.carousel-inner .carousel-item-next,
+.carousel-inner .active.carousel-item-left {
+    transform: translateX(100%);
+}
+
+.carousel-inner .carousel-item-prev,
+.carousel-inner .active.carousel-item-right {
+    transform: translateX(-100%);
+}
