@@ -44,8 +44,7 @@ class OptionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Скрываем поле commission
-        # self.fields['commission'].widget = forms.HiddenInput()
+        self.fields['package_type'].widget = forms.HiddenInput()
 
     def clean(self):
         cleaned_data = super().clean()

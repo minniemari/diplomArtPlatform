@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
+from django.forms import modelformset_factory
 import os
 
 # def upload_image(request):
@@ -60,61 +61,69 @@ def create_commission(request):
     if request.method == 'POST':
         commission_form = CommissionForm(request.POST, request.FILES)
         option_forms = [OptionForm(request.POST, prefix=f"option-{i}") for i in range(3)]
-        bonus_option_formset = BonusOptionFormSet(request.POST, prefix="bonus", queryset=BonusOption.objects.none())
+        bonus_option_formset = modelformset_factory(
+            BonusOption, form=BonusOptionForm, extra=0, can_delete=True
+        )(request.POST, prefix="bonus", queryset=BonusOption.objects.none())
         portfolio_forms = [PortfolioForm(request.POST, request.FILES, prefix=f"portfolio-{i}") for i in range(5)]
 
         is_three_packages = request.POST.get('package-switch') == 'on'
-        active_forms = option_forms[:3] if is_three_packages else [option_forms[1]]
-        package_types = ['BASIC', 'STANDARD', 'PREMIUM'] if is_three_packages else ['STANDARD']
 
-        if commission_form.is_valid() and all(f.is_valid() for f in active_forms) and bonus_option_formset.is_valid():
+        # Валидация форм
+        are_forms_valid = (
+            commission_form.is_valid() and
+            all(form.is_valid() for form in option_forms) and
+            bonus_option_formset.is_valid() and
+            all(pf.is_valid() for pf in portfolio_forms if pf['image'].value())
+        )
+
+        if are_forms_valid:
+            # Сохранение комишкии
             commission = commission_form.save(commit=False)
             commission.user = request.user
             commission.save()
 
-            # Сохраняем опции пакетов и связываем с коммишкой
-            for i, form in enumerate(active_forms):
+            # Сохранение опций
+            for pkg, form in zip(['BASIC', 'STANDARD', 'PREMIUM'], option_forms):
                 option = form.save(commit=False)
                 option.commission = commission
-                option.package_type = package_types[i]
+                option.package_type = pkg
                 option.save()
 
-            # Сохраняем дополнительные опции и добавляем в M2M
+            # Сохранение бонусных опций
             for form in bonus_option_formset:
                 if form.cleaned_data and not form.cleaned_data.get('DELETE'):
-                    bonus = form.save()
-                    commission.bonus_options.add(bonus)
+                    bonus = form.save(commit=False)
+                    bonus.commission = commission
+                    bonus.save()
 
-            # Сохраняем портфолио и связываем с коммишкой
+            # Сохранение портфолио
             for i, form in enumerate(portfolio_forms):
                 if form.is_valid() and form.cleaned_data.get('image'):
                     portfolio = form.save(commit=False)
                     portfolio.user = request.user
                     portfolio.commission = commission
-                    portfolio.description = form.cleaned_data.get('description') or f"Коммишка «{commission.title}» - работа {i + 1}"
+                    portfolio.description = form.cleaned_data.get(
+                        'description') or f"Коммишка «{commission.title}» - работа {i + 1}"
                     portfolio.save()
 
             return redirect('commission_detail', commission.id)
 
-        else:
-            print("Commission form errors:", commission_form.errors)
-            for i, form in enumerate(option_forms):
-                print(f"Option form {i} errors:", form.errors)
-            print("Bonus option formset errors:", bonus_option_formset.errors)
-
     else:
         commission_form = CommissionForm()
-        option_forms = [OptionForm(prefix=f"option-{i}") for i in range(3)]
-        bonus_option_formset = BonusOptionFormSet(queryset=BonusOption.objects.none(), prefix="bonus")
+        option_forms = [
+            OptionForm(prefix=f"option-{i}", initial={'package_type': pkg})
+            for i, pkg in enumerate(['BASIC', 'STANDARD', 'PREMIUM'])
+        ]
+        bonus_option_formset = modelformset_factory(
+            BonusOption, form=BonusOptionForm, extra=1, can_delete=True
+        )(queryset=BonusOption.objects.none(), prefix="bonus")
         portfolio_forms = [PortfolioForm(prefix=f"portfolio-{i}") for i in range(5)]
 
-    commission = None
     return render(request, 'create_commission.html', {
         'commission_form': commission_form,
         'option_forms': option_forms,
         'bonus_option_formset': bonus_option_formset,
         'portfolio_forms': portfolio_forms,
-        'commission': commission,
     })
 
 

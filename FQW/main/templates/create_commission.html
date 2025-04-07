@@ -79,17 +79,23 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Стоимость и опции</h5>
-                    <div class="form-check form-switch">
+
+                    <!-- Переключатель пакетов -->
+                    <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" id="package-switch">
-                        <label class="form-check-label" for="package-switch">1 пакет <span class="badge bg-secondary">3 пакета</span></label>
+                        <label class="form-check-label" for="package-switch">
+                            1 пакет <span class="badge bg-secondary">3 пакета</span>
+                        </label>
                     </div>
+
+                    <!-- Таблица опций -->
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th></th>
-                                <th class="package-column basic">ЭКОНОМ</th>
-                                <th class="package-column standard">СТАНДАРТ</th>
-                                <th class="package-column business">БИЗНЕС</th>
+                                <th>Параметр</th>
+                                <th class="package-column basic">БАЗОВЫЙ</th>
+                                <th class="package-column standard">СТАНДАРТНЫЙ</th>
+                                <th class="package-column premium">ПРЕМИУМ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -97,143 +103,165 @@
                             <tr>
                                 <td>Краткое описание</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.description }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.description }}
+                                            {% if form.description.errors %}
+                                                <div class="text-danger">{{ form.description.errors }}</div>
+                                            {% endif %}
+                                            <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if i == 0 %}BASIC{% elif i == 1 %}STANDARD{% else %}PREMIUM{% endif %}">
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Скетч -->
                             <tr>
                                 <td>Скетч</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.is_sketch }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.is_sketch }}
+                                            {% if form.is_sketch.errors %}
+                                                <div class="text-danger">{{ form.is_sketch.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Для печати -->
                             <tr>
                                 <td>Для печати</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.for_print }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.for_print }}
+                                            {% if form.for_print.errors %}
+                                                <div class="text-danger">{{ form.for_print.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Прорисовка окружающих -->
                             <tr>
                                 <td>Прорисовка окружающих</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.difficult_bg }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.difficult_bg }}
+                                            {% if form.difficult_bg.errors %}
+                                                <div class="text-danger">{{ form.difficult_bg.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Персонаж в полный рост -->
                             <tr>
                                 <td>Персонаж в полный рост</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.full_height }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.full_height }}
+                                            {% if form.full_height.errors %}
+                                                <div class="text-danger">{{ form.full_height.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Проработка деталей -->
                             <tr>
                                 <td>Проработка деталей</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.details }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.details }}
+                                            {% if form.details.errors %}
+                                                <div class="text-danger">{{ form.details.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Исходник в векторе -->
                             <tr>
                                 <td>Исходник в векторе</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.vector }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.vector }}
+                                            {% if form.vector.errors %}
+                                                <div class="text-danger">{{ form.vector.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Исходник в psd -->
                             <tr>
                                 <td>Исходник в psd</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.psd }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.psd }}
+                                            {% if form.psd.errors %}
+                                                <div class="text-danger">{{ form.psd.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Количество объектов -->
                             <tr>
                                 <td>Количество объектов</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.amount }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.amount }}
+                                            {% if form.amount.errors %}
+                                                <div class="text-danger">{{ form.amount.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Срок выполнения -->
                             <tr>
                                 <td>Срок выполнения</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.deadline }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.deadline }}
+                                            {% if form.deadline.errors %}
+                                                <div class="text-danger">{{ form.deadline.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
+
                             <!-- Цена -->
                             <tr>
                                 <td>Цена</td>
                                 {% for form in option_forms %}
-                                    <td class="package-column {% if forloop.counter == 1 %}basic{% elif forloop.counter == 2 %}standard{% else %}business{% endif %}">
-                                        {{ form.price }}
-                                        <!-- Скрытый input для package_type -->
-                                        <input type="hidden" name="{{ form.prefix }}-package_type" value="{% if forloop.counter == 1 %}BASIC{% elif forloop.counter == 2 %}STANDARD{% else %}PREMIUM{% endif %}">
-                                        <!-- Скрытый input для commission -->
-                                        <input type="hidden" name="{{ form.prefix }}-commission" value="{{ commission.id }}">
-                                    </td>
+                                    {% with forloop.counter0 as i %}
+                                        <td class="package-column {% if i == 0 %}basic{% elif i == 1 %}standard{% else %}premium{% endif %}">
+                                            {{ form.price }}
+                                            {% if form.price.errors %}
+                                                <div class="text-danger">{{ form.price.errors }}</div>
+                                            {% endif %}
+                                        </td>
+                                    {% endwith %}
                                 {% endfor %}
                             </tr>
                         </tbody>
@@ -265,7 +293,7 @@
 
                 </div>
             </div>
-            <!-- Портфолио -->
+              <!-- Портфолио -->
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title">Портфолио</h5>
@@ -297,81 +325,34 @@
                     </div>
                 </div>
             </div>
+
             <button type="submit" class="btn btn-primary">Опубликовать</button>
         </form>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Скрипты для управления отображением пакетов и добавления дополнительных опций
         const packageSwitch = document.getElementById('package-switch');
         const basicColumns = document.querySelectorAll('.package-column.basic');
         const standardColumns = document.querySelectorAll('.package-column.standard');
-        const businessColumns = document.querySelectorAll('.package-column.business');
+        const premiumColumns = document.querySelectorAll('.package-column.premium');
 
         function updateTableVisibility() {
             if (packageSwitch.checked) {
-                // Show all packages when switch is on
-                basicColumns.forEach(column => {
-                    column.style.display = 'table-cell';
-                    column.querySelectorAll('input, textarea').forEach(field => {
-                        field.disabled = false;
-                    });
-                });
-                standardColumns.forEach(column => {
-                    column.style.display = 'table-cell';
-                    column.querySelectorAll('input, textarea').forEach(field => {
-                        field.disabled = false;
-                    });
-                });
-                businessColumns.forEach(column => {
-                    column.style.display = 'table-cell';
-                    column.querySelectorAll('input, textarea').forEach(field => {
-                        field.disabled = false;
-                    });
-                });
+                basicColumns.forEach(column => column.style.display = 'table-cell');
+                standardColumns.forEach(column => column.style.display = 'table-cell');
+                premiumColumns.forEach(column => column.style.display = 'table-cell');
             } else {
-                // Show only "СТАНДАРТ" package when switch is off
-                basicColumns.forEach(column => {
-                    column.style.display = 'none';
-                    column.querySelectorAll('input, textarea').forEach(field => {
-                        field.disabled = true;
-                        field.value = ''; // Clear value for hidden fields
-                    });
-                });
-                standardColumns.forEach(column => {
-                    column.style.display = 'table-cell';
-                    column.querySelectorAll('input, textarea').forEach(field => {
-                        field.disabled = false;
-                    });
-                });
-                businessColumns.forEach(column => {
-                    column.style.display = 'none';
-                    column.querySelectorAll('input, textarea').forEach(field => {
-                        field.disabled = true;
-                        field.value = ''; // Clear value for hidden fields
-                    });
-                });
+                basicColumns.forEach(column => column.style.display = 'none');
+                standardColumns.forEach(column => column.style.display = 'table-cell');
+                premiumColumns.forEach(column => column.style.display = 'none');
             }
-            setPackageTypes(); // Update package types after visibility changes
         }
 
-        function setPackageTypes() {
-            const forms = document.querySelectorAll('.package-column > input[name$="package_type"]');
-            forms.forEach((input, index) => {
-                if (index < basicColumns.length) {
-                    input.value = 'BASIC'; // Set package type to BASIC
-                } else if (index < basicColumns.length + standardColumns.length) {
-                    input.value = 'STANDARD'; // Set package type to STANDARD
-                } else {
-                    input.value = 'PREMIUM'; // Set package type to PREMIUM
-                }
-            });
-        }
-
-        // Initial call to set correct state on page load
-        updateTableVisibility();
-
-        // Add event listener for switch changes
-        packageSwitch.addEventListener('change', updateTableVisibility);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTableVisibility();
+            packageSwitch.addEventListener('change', updateTableVisibility);
+        });
     </script>
     <script>
       document.querySelectorAll('.add-work-button').forEach(button => {
