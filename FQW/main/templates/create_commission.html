@@ -82,7 +82,7 @@
 
                     <!-- Переключатель пакетов -->
                     <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="package-switch">
+                        <input class="form-check-input" type="checkbox" id="package-switch" name="package-switch">
                         <label class="form-check-label" for="package-switch">
                             1 пакет <span class="badge bg-secondary">3 пакета</span>
                         </label>
@@ -338,20 +338,63 @@
         const premiumColumns = document.querySelectorAll('.package-column.premium');
 
         function updateTableVisibility() {
-            if (packageSwitch.checked) {
-                basicColumns.forEach(column => column.style.display = 'table-cell');
-                standardColumns.forEach(column => column.style.display = 'table-cell');
-                premiumColumns.forEach(column => column.style.display = 'table-cell');
-            } else {
-                basicColumns.forEach(column => column.style.display = 'none');
-                standardColumns.forEach(column => column.style.display = 'table-cell');
-                premiumColumns.forEach(column => column.style.display = 'none');
-            }
+            const isChecked = packageSwitch.checked;
+
+            // Управление видимостью и доступностью столбцов
+            basicColumns.forEach(column => {
+                column.style.display = isChecked ? 'table-cell' : 'none';
+                column.querySelectorAll('input, textarea, select').forEach(field => {
+                    field.disabled = !isChecked; // Отключаем поля, если столбец скрыт
+                        if (!isChecked) {
+                        field.value = ''; // Очищаем значение поля
+                    }
+                });
+            });
+
+            standardColumns.forEach(column => {
+                column.style.display = 'table-cell'; // Всегда видимый
+                column.querySelectorAll('input, textarea, select').forEach(field => {
+                    field.disabled = false; // Поля всегда доступны
+                });
+            });
+
+            premiumColumns.forEach(column => {
+                column.style.display = isChecked ? 'table-cell' : 'none';
+                column.querySelectorAll('input, textarea, select').forEach(field => {
+                    field.disabled = !isChecked; // Отключаем поля, если столбец скрыт
+                        if (!isChecked) {
+                    field.value = ''; // Очищаем значение поля
+                }
+                });
+            });
         }
 
+        // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', () => {
-            updateTableVisibility();
+            updateTableVisibility(); // Обновляем видимость и доступность столбцов
             packageSwitch.addEventListener('change', updateTableVisibility);
+
+            // Убедимся, что поля в скрытых столбцах отключены при загрузке
+            if (!packageSwitch.checked) {
+                basicColumns.forEach(column => {
+                    column.querySelectorAll('input, textarea, select').forEach(field => {
+                        field.disabled = true;
+                    });
+                });
+                premiumColumns.forEach(column => {
+                    column.querySelectorAll('input, textarea, select').forEach(field => {
+                        field.disabled = true;
+                    });
+                });
+            }
+
+            // Обработка отправки формы
+            document.querySelector('form').addEventListener('submit', function () {
+                // Включаем все поля перед отправкой формы
+                document.querySelectorAll('.package-column input, .package-column textarea, .package-column select').forEach(field => {
+                    field.disabled = false;
+                });
+            });
         });
     </script>
     <script>

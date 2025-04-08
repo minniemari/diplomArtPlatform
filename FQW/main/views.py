@@ -71,7 +71,8 @@ def create_commission(request):
         # Валидация форм
         are_forms_valid = (
             commission_form.is_valid() and
-            all(form.is_valid() for form in option_forms) and
+            all(form.is_valid() for i, form in enumerate(option_forms) if
+                is_three_packages or i == 1) and  # Проверяем только стандартный пакет, если свитч выключен
             bonus_option_formset.is_valid() and
             all(pf.is_valid() for pf in portfolio_forms if pf['image'].value())
         )
@@ -83,10 +84,19 @@ def create_commission(request):
             commission.save()
 
             # Сохранение опций
-            for pkg, form in zip(['BASIC', 'STANDARD', 'PREMIUM'], option_forms):
-                option = form.save(commit=False)
+            if is_three_packages:
+                # Сохраняем все три пакета
+                for pkg, form in zip(['BASIC', 'STANDARD', 'PREMIUM'], option_forms):
+                    option = form.save(commit=False)
+                    option.commission = commission
+                    option.package_type = pkg
+                    option.save()
+            else:
+                # Сохраняем только стандартный пакет
+                standard_form = option_forms[1]  # Второй элемент соответствует "STANDARD"
+                option = standard_form.save(commit=False)
                 option.commission = commission
-                option.package_type = pkg
+                option.package_type = 'STANDARD'
                 option.save()
 
             # Сохранение бонусных опций
