@@ -2,27 +2,259 @@
 {% load static %}
 
 {% block title %}Профиль художника{% endblock %}
-
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
 {% block content %}
-<h2>Профиль художника</h2>
-<div class="row">
-    <div class="col-md-4">
-        <img src="{{ profile.user.profile.image.url }}" alt="Аватар" class="img-fluid rounded-circle">
-        <p><strong>Специализация:</strong> {{ profile.specialization }}</p>
-        <p><strong>Описание:</strong> {{ profile.description }}</p>
-        <p><strong>Рейтинг:</strong> {{ profile.ratings }}</p>
+<div class="container mt-4">
+  <!-- Шапка профиля -->
+  <div class="row align-items-center mb-4">
+    <div class="col-md-3">
+      <img src="{{ profile.user.profile.image.url }}" alt="Аватар" class="img-fluid rounded-circle mb-2">
+      <h5>{{ profile.user.profile.user.username }}</h5>
+      <p>{{ profile.specialization }}</p>
     </div>
-    <div class="col-md-8">
-        <h3>Портфолио</h3>
-        <div class="row">
-            {% for portfolio in profile.portfolio_set.all %}
-            <div class="col-md-4 mb-3">
-                <img src="{{ portfolio.image.url }}" alt="Работа" class="img-fluid">
-            </div>
-            {% empty %}
-            <p>Нет работ в портфолио.</p>
-            {% endfor %}
+    <div class="col-md-9 d-flex justify-content-end">
+      {% if request.user == profile.user %}
+        <!-- Для владельца профиля -->
+        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+          Редактировать профиль
+        </button>
+      {% else %}
+        <!-- Для посетителей -->
+        <div class="d-flex flex-column align-items-center">
+          <img src="{{ profile.user.profile.image.url }}" alt="{{ profile.user.profile.user.username }}" class="rounded-circle me-2" width="40">
+          <span>{{ profile.user.profile.user.username }}</span>
         </div>
+        <button type="button" class="btn btn-secondary w-100 mt-2" data-bs-toggle="modal" data-bs-target="#messageModal">
+          Связаться со мной
+        </button>
+        <button type="button" class="btn btn-light w-100 mt-2" onclick="toggleFavoriteArtist({{ profile.user.id }})">
+          <i class="bi bi-heart-fill text-danger"></i> Добавить в избранное
+        </button>
+      {% endif %}
     </div>
-</div>
+  </div>
+
+  <!-- Описание профиля -->
+  <div class="mb-4">
+    <h5>Обо мне</h5>
+    <p>{{ profile.description }}</p>
+  </div>
+
+  <!-- Навыки -->
+  <div class="mb-4">
+    <h5>Навыки</h5>
+    <div class="d-flex flex-wrap gap-2">
+      {% for skill in profile.skills.all %}
+        <span class="badge bg-secondary">{{ skill.name }}</span>
+      {% empty %}
+        <p>Нет навыков.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <h5>Мои коммишки</h5>
+    <div class="row row-cols-4 g-3">
+      {% for commission in profile.user.commission_set.all %}
+        <div class="col">
+            <a href="{% url 'commission_detail' commission.id %}" class="text-decoration-none text-dark">
+              <div class="card h-100">
+                <img src="{{ commission.image.url }}" class="card-img-top" alt="{{ commission.title }}">
+                <div class="card-body">
+                  <h6 class="card-title">{{ commission.title }}</h6>
+                  <p class="card-text">От {{ commission.min_price }} ₽</p>
+                </div>
+              </div>
+            </a>
+        </div>
+      {% empty %}
+        <p>Нет активных коммиссий.</p>
+      {% endfor %}
+    </div>
+    <div class="text-end mt-3">
+      {% if request.user == profile.user %}
+        <a href="{% url 'create_commission' %}" class="btn btn-success">Создать коммишку</a>
+      {% endif %}
+    </div>
+
+  <h5>Портфолио</h5>
+    <div class="row row-cols-4 g-3">
+      {% for portfolio in profile.user.portfolio_set.all %}
+        <div class="col">
+          <div class="card h-100">
+            <img src="{{ portfolio.image.url }}" class="card-img-top" alt="{{ portfolio.description }}" data-bs-toggle="modal" data-bs-target="#portfolioModal{{ portfolio.id }}">
+            <div class="card-body">
+              {% if portfolio.description %}
+                <p class="card-text">{{ portfolio.description }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p>Нет работ в портфолио.</p>
+      {% endfor %}
+      {% if request.user == profile.user %}
+        <div class="col">
+          <div class="card h-100 text-center">
+            <button type="button" class="btn btn-light w-100" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
+              Добавить работу
+            </button>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Модальное окно для работы в портфолио -->
+    <div class="modal fade" id="portfolioModal{{ portfolio.id }}" tabindex="-1" aria-labelledby="portfolioModalLabel{{ portfolio.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="portfolioModalLabel{{ portfolio.id }}">Работа из портфолио</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-8">
+                <img src="{{ portfolio.image.url }}" class="img-fluid rounded" alt="{{ portfolio.description }}">
+              </div>
+              <div class="col-md-4">
+                <h6>Описание</h6>
+                <p>{{ portfolio.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Модальное окно для добавления работы -->
+    <div class="modal fade" id="addPortfolioModal" tabindex="-1" aria-labelledby="addPortfolioModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addPortfolioModalLabel">Добавить работу в портфолио</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Форма добавления работы -->
+            <form method="post" action="{% url 'add_portfolio' %}" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="portfolioImage" class="form-label">Изображение работы</label>
+                <input type="file" id="portfolioImage" name="image" required>
+              </div>
+              <div class="mb-3">
+                <label for="portfolioDescription" class="form-label">Описание работы</label>
+                <textarea id="portfolioDescription" name="description" rows="3" class="form-control"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Добавить работу</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно для редактирования профиля -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editProfileModalLabel">Редактирование профиля</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="id_specialization" class="form-label">Специализация</label>
+                <input type="text" id="id_specialization" name="specialization" value="{{ profile.specialization }}" class="form-control">
+              </div>
+              <div class="mb-3">
+                <label for="id_description" class="form-label">Описание</label>
+                <textarea id="id_description" name="description" rows="4" class="form-control">{{ profile.description }}</textarea>
+              </div>
+              <div class="mb-3">
+                <label for="id_image" class="form-label">Аватар</label>
+                <input type="file" id="id_image" name="image" class="form-control">
+              </div>
+              <div class="mb-3">
+                <label for="id_skills" class="form-label">Навыки</label>
+                <select id="id_skills" name="skills" multiple class="form-select">
+                  {% for skill in all_skills %}
+                    <option value="{{ skill.id }}" {% if skill in profile.skills.all %}selected{% endif %}>{{ skill.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Сохранить</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function toggleFavoriteArtist(artistId) {
+    fetch(`/toggle-favorite-artist/${artistId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const button = document.querySelector(`[onclick="toggleFavoriteArtist(${artistId})"]`);
+        const icon = button.querySelector('i');
+        const buttonText = button.querySelector('span');
+
+        if (data.is_favorite) {
+          icon.classList.add('text-danger'); // Сердце красное
+          buttonText.textContent = 'Удалить из избранного';
+        } else {
+          icon.classList.remove('text-danger'); // Сердце серое
+          buttonText.textContent = 'Добавить в избранное';
+        }
+      } else {
+        alert('Ошибка при обновлении избранного.');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function sendMessage(recipientId) {
+    const messageContent = document.getElementById('messageText').value;
+    if (!messageContent.trim()) {
+      alert('Введите текст сообщения');
+      return;
+    }
+
+    fetch('/send-message/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({
+        recipient: recipientId,
+        content: messageContent,
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Сообщение успешно отправлено!');
+        document.getElementById('messageText').value = '';
+        $('#messageModal').modal('hide');
+      } else {
+        alert('Ошибка при отправке сообщения.');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+</script>
 {% endblock %}

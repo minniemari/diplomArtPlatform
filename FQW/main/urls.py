@@ -27,6 +27,10 @@ urlpatterns = [
     # path('upload-image/', views.upload_image, name='upload_image'),
     # path('upload-portfolio/', views.upload_portfolio_image, name='upload_portfolio'),
     path('commission_success/',views.commission_success, name='commission_success'),
+    path('toggle-favorite-commission/<int:commission_id>/', views.toggle_favorite_commission, name='toggle_favorite_commission'),
+    path('add-portfolio/', add_portfolio, name='add_portfolio'),
+    path('<str:username>/', profile_detail, name='profile_detail'),
+    path('edit-profile/', edit_profile, name='edit_profile'),
 ]
 
 if settings.DEBUG:

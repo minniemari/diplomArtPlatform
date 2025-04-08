@@ -76,3 +76,28 @@
 .carousel-inner .active.carousel-item-right {
     transform: translateX(-100%);
 }
+
+/* styles.css */
+.btn-favorite {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #dc3545; /* Цвет сердца */
+  font-size: 1.2rem; /* Размер иконки */
+  transition: all 0.3s ease;
+}
+
+.btn-favorite:hover {
+  background-color: #f8d7da;
+  border-color: #dc3545;
+}
+
+.btn-favorite.active {
+  background-color: #dc3545;
+  color: #ffffff;
+}

@@ -89,10 +89,20 @@ class UserResponseForm(forms.ModelForm):
         model = UserResponse
         fields = [
             'technical_task',  # Техническое задание
-            'files',
-            'delivery_time',
+            'files',           # Прикрепленные файлы
         ]
         widgets = {
-            'technical_task': forms.Textarea(attrs={'rows': 5, 'placeholder': 'Опишите ваше техническое задание'}),
-            'delivery_time': forms.DateInput(attrs={'type': 'date'}),
+            'technical_task': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['files'].required = False  # Файлы необязательны
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['specialization', 'description', 'image', 'skills']
+        widgets = {
+            'skills': forms.SelectMultiple(),
         }

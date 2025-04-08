@@ -6,6 +6,7 @@
     <title>{% block title %}My Art Platform{% endblock %}</title>
     <!-- Подключение Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Подключение собственного стиля -->
     {% block extra_css %}{% endblock %}
 </head>
@@ -18,28 +19,54 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    <!-- Кнопка "Каталог коммишек" -->
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light" href="{% url 'commissions_catalog' %}">
+                            <i class="bi bi-list-ul"></i> Коммишки
+                        </a>
+                    </li>
+                    <!-- Кнопка "Биржа" -->
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light" href="{% url 'bazaar_catalog' %}">
+                            <i class="bi bi-shop"></i> Биржа
+                        </a>
+                    </li>
+
                     {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'profile' %}">Профиль</a>
+                    <!-- Профиль пользователя -->
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light" href="{% url 'profile' %}">
+                            <i class="bi bi-person-circle"></i> Профиль
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Мои заказы</a>
+                    <!-- Мои заказы -->
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light" href="#">
+                            <i class="bi bi-cart-check"></i> Мои заказы
+                        </a>
                     </li>
+                    <!-- Выйти -->
                     <li class="nav-item">
                         <form method="post" action="{% url 'logout' %}" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="nav-link btn btn-link" style="padding: 0; border: none; background: none;">
-                                Выйти
+                            <button type="submit" class="btn btn-outline-light">
+                                <i class="bi bi-box-arrow-right"></i> Выйти
                             </button>
                         </form>
                     </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Войти</a>
+                    <!-- Войти -->
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light" href="{% url 'login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Войти
+                        </a>
                     </li>
+                    <!-- Регистрация -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">Регистрация</a>
+                        <a class="btn btn-outline-light" href="{% url 'register' %}">
+                            <i class="bi bi-person-plus"></i> Регистрация
+                        </a>
                     </li>
                     {% endif %}
                 </ul>

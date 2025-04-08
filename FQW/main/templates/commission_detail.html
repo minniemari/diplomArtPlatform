@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-
+<!-- Подключение собственного стиля -->
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/CommissionDetail.css' %}">
+{% endblock %}
 {% block content %}
 <div class="container mt-4">
   <div class="row">
@@ -61,11 +64,16 @@
           <ul class="list-unstyled">
             <li>Срок выполнения: {{ basic_option.deadline }} дней</li>
             <li>Количество персонажей: {{ basic_option.amount }}</li>
+            {% if basic_option.is_sketch %}<li>Скетч</li>{% endif %}
             {% if basic_option.for_print %}<li>Подходит для печати</li>{% endif %}
+            {% if basic_option.difficult_bg %}<li>Прорисовка окружения</li>{% endif %}
+            {% if basic_option.full_height %}<li>Персонаж в полный рост</li>{% endif %}
             {% if basic_option.details %}<li>Проработка деталей</li>{% endif %}
+            {% if basic_option.vector %}<li>В векторе</li>{% endif %}
+            {% if basic_option.psd %}<li>Исходник в psd</li>{% endif %}
             <li>Правки: Неограниченные</li>
           </ul>
-          <a href="#" class="btn btn-primary w-100">Заказать</a>
+          <a href="{% url 'order_form' commission.id %}?package=BASIC" class="btn btn-primary w-100">Заказать</a>
         </div>
         {% endif %}
 
@@ -76,11 +84,16 @@
           <ul class="list-unstyled">
             <li>Срок выполнения: {{ standard_option.deadline }} дней</li>
             <li>Количество персонажей: {{ standard_option.amount }}</li>
+            {% if standard_option.is_sketch %}<li>Скетч</li>{% endif %}
             {% if standard_option.for_print %}<li>Подходит для печати</li>{% endif %}
+            {% if standard_option.difficult_bg %}<li>Прорисовка окружения</li>{% endif %}
+            {% if standard_option.full_height %}<li>Персонаж в полный рост</li>{% endif %}
             {% if standard_option.details %}<li>Проработка деталей</li>{% endif %}
+            {% if standard_option.vector %}<li>В векторе</li>{% endif %}
+            {% if standard_option.psd %}<li>Исходник в psd</li>{% endif %}
             <li>Правки: Неограниченные</li>
           </ul>
-          <a href="#" class="btn btn-primary w-100">Заказать</a>
+          <a href="{% url 'order_form' commission.id %}?package=STANDARD" class="btn btn-primary w-100">Заказать</a>
         </div>
         {% endif %}
 
@@ -91,13 +104,29 @@
           <ul class="list-unstyled">
             <li>Срок выполнения: {{ premium_option.deadline }} дней</li>
             <li>Количество персонажей: {{ premium_option.amount }}</li>
+            {% if premium_option.is_sketch %}<li>Скетч</li>{% endif %}
             {% if premium_option.for_print %}<li>Подходит для печати</li>{% endif %}
+            {% if premium_option.difficult_bg %}<li>Прорисовка окружения</li>{% endif %}
+            {% if premium_option.full_height %}<li>Персонаж в полный рост</li>{% endif %}
             {% if premium_option.details %}<li>Проработка деталей</li>{% endif %}
+            {% if premium_option.vector %}<li>В векторе</li>{% endif %}
+            {% if premium_option.psd %}<li>Исходник в psd</li>{% endif %}
             <li>Правки: Неограниченные</li>
           </ul>
-          <a href="#" class="btn btn-primary w-100">Заказать</a>
+          <a href="{% url 'order_form' commission.id %}?package=PREMIUM" class="btn btn-primary w-100">Заказать</a>
         </div>
         {% endif %}
+      </div>
+      <div class="d-flex align-items-center">
+         <!-- Кнопка "Связаться со мной" -->
+        <button type="button" class="btn btn-secondary w-100 mt-2" data-bs-toggle="modal" data-bs-target="#messageModal">
+          Связаться со мной
+        </button>
+
+        <!-- Кнопка "Добавить в избранное" -->
+        <button type="button" class="btn btn-favorite" onclick="toggleFavoriteCommission({{ commission.id }})">
+          <i class="bi bi-heart-fill"></i>
+        </button>
       </div>
 
       <!-- Author Info -->
@@ -113,4 +142,68 @@
     </div>
   </div>
 </div>
+<!-- Подключение модального окна -->
+{% include 'message_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function toggleFavoriteCommission(commissionId) {
+    fetch(`/toggle-favorite-commission/${commissionId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const button = document.querySelector(`[onclick="toggleFavoriteCommission(${commissionId})"]`);
+
+        // Переключение класса active
+        if (data.is_favorite) {
+          button.classList.add('active'); // Красное сердце
+        } else {
+          button.classList.remove('active'); // Серое сердце
+        }
+      } else {
+        alert('Ошибка при обновлении избранного.');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function sendMessage(recipientId) {
+    const messageContent = document.getElementById('messageContent').value;
+    if (!messageContent.trim()) {
+      alert('Введите текст сообщения');
+      return;
+    }
+
+    // Send the message via AJAX
+    fetch('/send-message/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({
+        recipient: recipientId,
+        content: messageContent,
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Сообщение успешно отправлено!');
+        document.getElementById('messageContent').value = '';
+        $('#messageModal').modal('hide');
+      } else {
+        alert('Ошибка при отправке сообщения.');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+</script>
 {% endblock %}

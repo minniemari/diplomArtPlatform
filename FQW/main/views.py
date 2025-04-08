@@ -6,6 +6,7 @@ from django.db.models import Min
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.utils.timezone import now, timedelta
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 from django.forms import modelformset_factory
@@ -220,7 +221,18 @@ def order_form(request, pk):
 
     # Получаем выбранный пакет из GET-параметра
     package_type = request.GET.get('package', 'BASIC')  # По умолчанию "Базовый"
-    selected_option = commission.options.get(package_type=package_type.upper())
+    selected_option = None
+
+    try:
+        selected_option = commission.options.get(package_type=package_type.upper())
+    except Option.DoesNotExist:
+        # Если пакет не найден, используем первый доступный пакет
+        available_options = commission.options.all()
+        if available_options.exists():
+            selected_option = available_options.first()
+        else:
+            # Если вообще нет пакетов, возвращаем ошибку
+            return HttpResponse("Для этой комиссии нет доступных пакетов.", status=404)
 
     # Дополнительные опции
     additional_options = BonusOption.objects.filter(commission=commission)
@@ -256,8 +268,22 @@ def order_form(request, pk):
 
 @login_required
 def send_message(request, pk):
-    user = get_object_or_404(User, pk=pk)
-    return render(request, 'message_modal.html', {'artist': user})
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient')
+        content = request.POST.get('content')
+
+        if not content.strip():
+            return JsonResponse({'success': False, 'message': 'Текст сообщения не может быть пустым.'})
+
+        recipient = get_object_or_404(User, id=recipient_id)
+        Message.objects.create(
+            sender=request.user,
+            recipient=recipient,
+            content=content,
+        )
+
+        return JsonResponse({'success': True, 'message': 'Сообщение успешно отправлено.'})
+    return JsonResponse({'success': False, 'message': 'Неверный запрос.'})
 
 @login_required
 def artist_order_detail(request, pk):
@@ -415,3 +441,57 @@ def offer_service(request, bid_id):
         'bid': bid,
         'form': form,
     })
+
+@login_required
+def toggle_favorite_commission(request, commission_id):
+    if request.method == 'POST':
+        commission = get_object_or_404(Commission, id=commission_id)
+
+        favorite, created = FavoriteCommission.objects.get_or_create(user=request.user, commission=commission)
+
+        if not created:
+            # Если уже есть в избранном, удаляем
+            favorite.delete()
+            is_favorite = False
+        else:
+            # Если нет в избранном, добавляем
+            is_favorite = True
+
+        return JsonResponse({'success': True, 'is_favorite': is_favorite})
+    return JsonResponse({'success': False, 'message': 'Неверный запрос.'})
+
+@login_required
+def add_portfolio(request):
+    if request.method == 'POST':
+        form = PortfolioForm(request.POST, request.FILES)
+        if form.is_valid():
+            portfolio = form.save(commit=False)
+            portfolio.user = request.user
+            portfolio.save()
+            return redirect('profile')  # Перенаправление на страницу профиля
+    else:
+        form = PortfolioForm()
+    return render(request, 'add_portfolio.html', {'form': form})
+
+@login_required
+def profile_detail(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    profile = profile_user.profile
+
+    context = {
+        'profile': profile,
+        'commissions': profile.user.commission_set.all(),
+    }
+    return render(request, 'profile.html', context)
+
+@login_required
+def edit_profile(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, 'edit_profile.html', {'form': form})

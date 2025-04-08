@@ -286,3 +286,13 @@ class File(models.Model):
 
 class ImageStorage(models.Model):
     image = models.ImageField(upload_to='images/')
+
+class FavoriteCommission(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_commissions')
+    commission = models.ForeignKey(Commission, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class FavoriteArtist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_artists')
+    artist = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorited_by_users')
+    created_at = models.DateTimeField(auto_now_add=True)
