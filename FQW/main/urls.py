@@ -14,9 +14,6 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('create-commission/', views.create_commission, name='create_commission'),
     path('commission/<int:pk>/', views.commission_detail, name='commission_detail'),
-    path('artist-order/<int:pk>/', views.artist_order_detail, name='artist_order_detail'),
-    path('customer-order/<int:pk>/', views.customer_order_detail, name='customer_order_detail'),
-    path('my-orders/', views.my_orders, name='my_orders'),
     path('profile/', views.profile, name='profile'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('create-bid/', views.create_bid, name='create_bid'),
@@ -24,13 +21,14 @@ urlpatterns = [
     path('bazaar/', views.bazaar_catalog, name='bazaar_catalog'),
     path('bazaar/<int:bid_id>/offer/', views.offer_service, name='offer_service'),
     path('commission/<int:pk>/order/', views.order_form, name='order_form'),
-    # path('upload-image/', views.upload_image, name='upload_image'),
-    # path('upload-portfolio/', views.upload_portfolio_image, name='upload_portfolio'),
     path('commission_success/',views.commission_success, name='commission_success'),
     path('toggle-favorite-commission/<int:commission_id>/', views.toggle_favorite_commission, name='toggle_favorite_commission'),
     path('add-portfolio/', add_portfolio, name='add_portfolio'),
-    path('<str:username>/', profile_detail, name='profile_detail'),
     path('edit-profile/', edit_profile, name='edit_profile'),
+    path('my-orders/', views.my_orders, name='my_orders'),
+    path('order/<int:pk>/', views.order_detail_view, name='order_detail'),
+    path('send-message/<int:order_id>/', views.send_message, name='send_message'),
+    path('<str:username>/', profile_detail, name='profile_detail'),
 ]
 
 if settings.DEBUG:

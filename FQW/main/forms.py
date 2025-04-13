@@ -7,8 +7,8 @@ from django.forms import modelformset_factory
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    specialization = forms.CharField(max_length=255, required=False)
-    description = forms.CharField(widget=forms.Textarea, required=False)
+    # specialization = forms.CharField(max_length=255, required=False)
+    # description = forms.CharField(widget=forms.Textarea, required=False)
 
     class Meta:
         model = User
@@ -90,14 +90,34 @@ class UserResponseForm(forms.ModelForm):
         fields = [
             'technical_task',  # Техническое задание
             'files',           # Прикрепленные файлы
+            'description',     # Описание (обязательно для биржи)
+            'price',           # Стоимость (обязательно для биржи)
+            'delivery_time',   # Срок выполнения (обязательно для биржи)
+            'birzha',          # Биржа (скрытое поле)
         ]
         widgets = {
             'technical_task': forms.Textarea(attrs={'rows': 4}),
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'price': forms.NumberInput(attrs={'min': 1}),
+            'delivery_time': forms.NumberInput(attrs={'min': 1}),
+            'birzha': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
+        birzha = kwargs.pop('birzha', None)  # Получаем флаг, указывающий, что это отклик на биржу
         super().__init__(*args, **kwargs)
         self.fields['files'].required = False  # Файлы необязательны
+
+        # Если это отклик на биржу, делаем поля description, price и delivery_time обязательными
+        if birzha:
+            self.fields['description'].required = True
+            self.fields['price'].required = True
+            self.fields['delivery_time'].required = True
+        else:
+            # Если это отклик на коммишку, делаем поля необязательными
+            self.fields['description'].required = False
+            self.fields['price'].required = False
+            self.fields['delivery_time'].required = False
 
 class ProfileForm(forms.ModelForm):
     class Meta:

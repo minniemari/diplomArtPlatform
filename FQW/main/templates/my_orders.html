@@ -1,36 +1,97 @@
+<!-- my_orders.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Мои заказы{% endblock %}
-
 {% block content %}
-<h2>Мои заказы</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Заказ</th>
-            <th>Заказчик</th>
-            <th>Статус</th>
-            <th>Дата завершения</th>
-            <th>Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for order in orders %}
-        <tr>
-            <td>{{ order }}</td>
-            <td>{{ order.customer.username }}</td>
-            <td>{{ order.get_status_display }}</td>
-            <td>{{ order.deadline }}</td>
-            <td>
-                <a href="{% url 'artist_order_detail' order.id %}" class="btn btn-sm btn-primary">Подробнее</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5">Нет заказов.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="container mt-4">
+  <h2 class="mb-4">Мои заказы</h2>
+
+  <!-- Заказы на коммишки (как заказчик) -->
+  <h4>Мои заявки на коммишки</h4>
+  <div class="row">
+    {% for response in commission_responses_as_customer %}
+      <div class="col-md-6 mb-4">
+        <div class="card shadow">
+          <div class="card-body">
+            <h5 class="card-title">{{ response.commission.title }}</h5>
+            {% if response.order %}
+              <span class="badge bg-info">{{ response.order.get_status_display }}</span>
+            {% else %}
+              <span class="badge bg-warning">Ожидает ответа</span>
+            {% endif %}
+            <a href="{% url 'order_detail' response.id %}" class="btn btn-outline-primary btn-sm float-end">Подробнее</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>Нет активных заявок на коммишки.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Отклики на биржу (как заказчик) -->
+  <h4>Мои отклики на биржу</h4>
+  <div class="row">
+    {% for response in birzha_responses_as_customer %}
+      <div class="col-md-6 mb-4">
+        <div class="card shadow">
+          <div class="card-body">
+            <h5 class="card-title">{{ response.birzha.title }}</h5>
+            {% if response.order %}
+              <span class="badge bg-info">{{ response.order.get_status_display }}</span>
+            {% else %}
+              <span class="badge bg-warning">Ожидает ответа</span>
+            {% endif %}
+            <a href="{% url 'order_detail' response.id %}" class="btn btn-outline-primary btn-sm float-end">Подробнее</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>Нет откликов на биржу.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Коммишки как художник -->
+  <h4>Отклики на коммишки</h4>
+  <div class="row">
+    {% for response in commission_responses_as_artist %}
+      <div class="col-md-6 mb-4">
+        <div class="card shadow">
+          <div class="card-body">
+            <h5 class="card-title">{{ response.commission.title }}</h5>
+            {% if response.order %}
+              <span class="badge bg-info">{{ response.order.get_status_display }}</span>
+            {% else %}
+              <span class="badge bg-warning">Ожидает принятия</span>
+            {% endif %}
+            <a href="{% url 'order_detail' response.id %}" class="btn btn-outline-primary btn-sm float-end">Подробнее</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>Нет отправленных заявок на коммишки.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Биржа как художник -->
+  <h4>Отклики на биржу</h4>
+  <div class="row">
+    {% for response in birzha_responses_as_artist %}
+      <div class="col-md-6 mb-4">
+        <div class="card shadow">
+          <div class="card-body">
+            <h5 class="card-title">{{ response.birzha.title }}</h5>
+            {% if response.order %}
+              <span class="badge bg-info">{{ response.order.get_status_display }}</span>
+            {% else %}
+              <span class="badge bg-warning">Ожидает принятия</span>
+            {% endif %}
+            <a href="{% url 'order_detail' response.id %}" class="btn btn-outline-primary btn-sm float-end">Подробнее</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>Нет отправленных откликов на биржу.</p>
+    {% endfor %}
+  </div>
+</div>
 {% endblock %}

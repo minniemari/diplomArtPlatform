@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Детали заказа</h2>
+
+  <!-- Основная информация о заказе -->
+  {% if not order %}
+    <div class="card mb-4">
+      <div class="card-body">
+        {% if response.commission %}
+          <h5>Коммишка: {{ response.commission.title }}</h5>
+        {% elif response.birzha %}
+          <h5>Биржа: {{ response.birzha.title }}</h5>
+        {% endif %}
+
+        <p><strong>Описание:</strong> {{ response.description }}</p>
+        <p><strong>Техническое задание:</strong> {{ response.technical_task|default:"Не указано" }}</p>
+        <p><strong>Цена:</strong> {{ response.price }}₽</p>
+        <p><strong>Срок:</strong> {{ response.delivery_time }} дней</p>
+
+        <p><span class="badge bg-secondary">Ожидает подтверждения</span></p>
+
+        <!-- Кнопки управления заказом -->
+        {% if response.commission and request.user == response.commission.user %}
+          <form method="post">
+            {% csrf_token %}
+            <button name="accept_order" class="btn btn-success me-2">Принять заказ</button>
+            <button name="reject_order" class="btn btn-danger">Отклонить заказ</button>
+          </form>
+        {% elif response.birzha and request.user == response.birzha.user %}
+          <form method="post">
+            {% csrf_token %}
+            <button name="accept_order" class="btn btn-success me-2">Принять заказ</button>
+            <button name="reject_order" class="btn btn-danger">Отклонить заказ</button>
+          </form>
+        {% else %}
+          <p>Вы не можете управлять этим заказом.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Панель статусов и дополнительной информации (отображается только если заказ существует) -->
+  {% if order %}
+    <div class="row">
+      <div class="col-md-8">
+        <!-- Дополнительная информация о заказе -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5>Название заказа:
+              {% if response.commission %}
+                {{ response.commission.title }}
+              {% elif response.birzha %}
+                {{ response.birzha.title }}
+              {% endif %}
+            </h5>
+            <p><strong>Техническое задание:</strong> {{ response.technical_task|default:"Не указано" }}</p>
+            <p><strong>Стоимость:</strong> {{ order.price }}₽</p>
+            <p><strong>Срок исполнения:</strong> {{ order.deadline|date:"d.m.Y" }}</p>
+
+            <!-- Прикрепленные файлы -->
+            {% if response.files.all %}
+              <p><strong>Прикрепленные файлы:</strong></p>
+              <ul>
+                {% for file in response.files.all %}
+                  <li><a href="{{ file.file.url }}">{{ file.filename }}</a></li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            <!-- Информация о выбранном пакете -->
+            {% if selected_option %}
+              <p><strong>Выбранный пакет:</strong> {{ selected_option.get_package_type_display }}</p>
+              <p><strong>Описание пакета:</strong> {{ selected_option.description }}</p>
+              <p><strong>Стоимость пакета:</strong> {{ selected_option.price }}₽</p>
+              <p><strong>Срок выполнения пакета:</strong> {{ selected_option.deadline }} дней</p>
+              <p><strong>Количество объектов:</strong> {{ selected_option.amount }}</p>
+
+              <!-- Состав пакета -->
+              <p><strong>Состав пакета:</strong></p>
+              <ul>
+                {% if selected_option.is_sketch %}
+                  <li>Скетч</li>
+                {% endif %}
+                {% if selected_option.for_print %}
+                  <li>Для печати</li>
+                {% endif %}
+                {% if selected_option.difficult_bg %}
+                  <li>Прорисовка окружающих</li>
+                {% endif %}
+                {% if selected_option.full_height %}
+                  <li>Персонаж в полный рост</li>
+                {% endif %}
+                {% if selected_option.details %}
+                  <li>Проработка деталей</li>
+                {% endif %}
+                {% if selected_option.vector %}
+                  <li>Исходник в векторе</li>
+                {% endif %}
+                {% if selected_option.psd %}
+                  <li>Исходник в PSD</li>
+                {% endif %}
+              </ul>
+            {% endif %}
+
+            <!-- Дополнительные опции -->
+            {% if additional_options %}
+              <p><strong>Дополнительные опции:</strong></p>
+              <ul>
+                {% for option in additional_options %}
+                  <li>{{ option.name }} (+{{ option.price }}₽, +{{ option.deadline }} дней)</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Чат -->
+        {% if request.user == order.artist or request.user == order.customer %}
+          <h4>Чат</h4>
+          <div class="border p-3 mb-4" style="max-height: 300px; overflow-y: auto;">
+            {% for message in messages %}
+              <p><strong>{{ message.sender.username }}</strong>: {{ message.text }}</p>
+            {% empty %}
+              <p>Пока нет сообщений.</p>
+            {% endfor %}
+          </div>
+
+          <form id="chat-form" method="post" action="{% url 'send_message' order.id %}">
+            {% csrf_token %}
+            <textarea name="content" rows="3" class="form-control mb-2" required></textarea>
+            <button class="btn btn-secondary">Отправить</button>
+          </form>
+        {% endif %}
+      </div>
+
+      <div class="col-md-4">
+        <!-- Панель статусов -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5>Статусы заказа</h5>
+            <ul class="list-group list-group-flush">
+              {% for status, label in order.STATUS_CHOICES %}
+                <li class="list-group-item {% if status == order.status %}active-status{% endif %}">
+                  {{ label }}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Информация об исполнителе -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5>Исполнитель</h5>
+            <div class="d-flex align-items-center">
+              <img src="{% if order.artist.profile.image %}{{ order.artist.profile.image.url }}{% else %}{% static 'default_avatar.png' %}{% endif %}" alt="Аватар исполнителя" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+              <div>
+                <p>{{ order.artist.username }}</p>
+                <p>Рейтинг: {{ order.artist.profile.ratings }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Стили для подсветки текущего статуса -->
+<style>
+  .active-status {
+    background-color: #0d6efd; /* Цвет фона */
+    color: white; /* Цвет текста */
+    font-weight: bold; /* Жирный текст */
+  }
+</style>
+{% endblock %}

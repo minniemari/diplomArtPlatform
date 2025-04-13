@@ -345,9 +345,6 @@
                 column.style.display = isChecked ? 'table-cell' : 'none';
                 column.querySelectorAll('input, textarea, select').forEach(field => {
                     field.disabled = !isChecked; // Отключаем поля, если столбец скрыт
-                        if (!isChecked) {
-                        field.value = ''; // Очищаем значение поля
-                    }
                 });
             });
 
@@ -362,9 +359,6 @@
                 column.style.display = isChecked ? 'table-cell' : 'none';
                 column.querySelectorAll('input, textarea, select').forEach(field => {
                     field.disabled = !isChecked; // Отключаем поля, если столбец скрыт
-                        if (!isChecked) {
-                    field.value = ''; // Очищаем значение поля
-                }
                 });
             });
         }

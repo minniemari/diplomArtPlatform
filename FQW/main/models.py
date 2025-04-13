@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from django.utils.timezone import now
+from django.utils.timezone import now, timedelta
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -10,7 +10,7 @@ class Profile(models.Model):
     specialization = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     ratings = models.FloatField(default=0)
-    image = models.ImageField(upload_to='profiles/', blank=True, null = True)
+    image = models.ImageField(upload_to='profiles/', blank=True, null = True, default='default_avatar.png')
     skills = models.ManyToManyField('Skills')
     commission = models.ManyToManyField('Commission', blank=True)
 
@@ -79,6 +79,7 @@ class Orders(models.Model):
 
     artist= models.ForeignKey(User, on_delete=models.CASCADE, related_name='artist_orders')
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_orders')
+    response = models.OneToOneField('UserResponse', on_delete=models.SET_NULL, null=True, blank=True)
     portfolio = models.ForeignKey(Portfolio, on_delete=models.SET_NULL, null=True, blank=True)
     status =  models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -147,27 +148,6 @@ class OrderCancellation(models.Model):
     def __str__(self):
         return f"Отмена заказа #{self.order.id}"
 
-# Модель откликов
-class UserResponse(models.Model):
-    artist = models.ForeignKey(User, on_delete=models.CASCADE, related_name='responses_as_artist')  # Художник откликается на биржу
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='responses_as_customer')  # Заказчик откликается на коммишку
-    birzha = models.ForeignKey(Birzha, on_delete=models.CASCADE, null=True, blank=True)  # Отклик на биржу
-    commission = models.ForeignKey(Commission, on_delete=models.CASCADE, null=True, blank=True)  # Отклик на коммишку
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField()
-    technical_task = models.TextField(blank=True, null=True)  # Техническое задание
-    files = models.ManyToManyField('File', blank=True)  # Возможность прикреплять файлы
-    delivery_time = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        # Проверка, что указано только одно из двух полей: birzha или commission
-        if self.birzha and self.commission:
-            raise ValueError("Отклик не может быть одновременно на биржу и на коммишку")
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Отклик от #{self.user.id}"
 
 # Модель дополнительных опций
 class BonusOption(models.Model):
@@ -206,6 +186,49 @@ class Option(models.Model):
 
     def __str__(self):
         return f"{self.get_package_type_display()} - {self.price}₽"
+
+#Модель откликов
+class UserResponse(models.Model):
+    # Основные связи
+    artist = models.ForeignKey(User, on_delete=models.CASCADE, related_name='responses_as_artist')  # Художник откликается на биржу
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='responses_as_customer')  # Заказчик откликается на коммишку
+    birzha = models.ForeignKey('Birzha', on_delete=models.CASCADE, null=True, blank=True)  # Отклик на биржу
+    commission = models.ForeignKey('Commission', on_delete=models.CASCADE, null=True, blank=True)  # Отклик на коммишку
+
+    # Поля, заполняемые на страницах offer_service и order_form
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # Стоимость
+    description = models.TextField(blank=True, null=True)  # Описание
+    technical_task = models.TextField(blank=True, null=True)  # Техническое задание
+    files = models.ManyToManyField('File', blank=True)  # Прикрепленные файлы
+    delivery_time = models.IntegerField()  # Срок выполнения (в днях)
+
+    # Поля для хранения данных о выбранном пакете
+    package_type = models.CharField(max_length=10, choices=Option.PACKAGE_CHOICES, blank=True, null=True)  # Тип пакета
+    package_description = models.TextField(blank=True, null=True)  # Описание пакета
+    package_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  # Цена пакета
+    package_deadline = models.IntegerField(blank=True, null=True)  # Срок выполнения пакета
+
+    # Дополнительные опции
+    selected_bonus_options = models.ManyToManyField('BonusOption', blank=True)  # Выбранные дополнительные опции
+
+    # Временные метки
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Проверка, что указано только одно из двух полей: birzha или commission
+        if self.birzha and self.commission:
+            raise ValueError("Отклик не может быть одновременно на биржу и на коммишку")
+
+        # Установка срока действия отклика (7 дней)
+        if not self.created_at:
+            self.created_at = now()
+            self.expires_at = self.created_at + timedelta(days=7)
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Отклик от #{self.artist.id} на {self.birzha or self.commission}"
 
 # Модель чата
 class Chat(models.Model):

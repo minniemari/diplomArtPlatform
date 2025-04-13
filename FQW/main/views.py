@@ -6,31 +6,14 @@ from django.db.models import Min
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.utils import timezone
 from django.utils.timezone import now, timedelta
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 from django.forms import modelformset_factory
+
 import os
 
-# def upload_image(request):
-#     if request.method == 'POST' and request.FILES.get('file'):
-#         file = request.FILES['file']
-#         file_path = default_storage.save(f'portfolio/{file.name}', file)
-#         return JsonResponse({'success': True, 'file_url': default_storage.url(file_path)})
-#     return JsonResponse({'success': False})
-#
-# @login_required
-# def upload_portfolio_image(request):
-#     if request.method == 'POST' and request.FILES.get('file'):
-#         portfolio = Portfolio(user=request.user)
-#         portfolio.image = request.FILES['file']
-#         portfolio.save()
-#         return JsonResponse({
-#             'success': True,
-#             'image_url': portfolio.image.url,
-#             'id': portfolio.id
-#         })
-#     return JsonResponse({'success': False})
 
 def register(request):
     if request.method == 'POST':
@@ -40,17 +23,17 @@ def register(request):
             # Создаем профиль художника после регистрации
             profile = Profile.objects.create(
                 user=user,
-                specialization=form.cleaned_data.get('specialization'),
-                description=form.cleaned_data.get('description')
+                # specialization=form.cleaned_data.get('specialization'),
+                # description=form.cleaned_data.get('description')
             )
-            # Добавляем навыки (если нужно)
-            skills = form.cleaned_data.get('skills', [])
-            for skill_name in skills:
-                skill, _ = Skills.objects.get_or_create(name=skill_name)
-                profile.skills.add(skill)
+            # # Добавляем навыки (если нужно)
+            # skills = form.cleaned_data.get('skills', [])
+            # for skill_name in skills:
+            #     skill, _ = Skills.objects.get_or_create(name=skill_name)
+            #     profile.skills.add(skill)
             login(request, user)
             print("Формы валидны")
-            # return redirect('home')  # Перенаправляем на главную страницу
+            return redirect('home')  # Перенаправляем на главную страницу
     else:
         form = RegisterForm()
         print("Ошибки в форме:", form.errors)
@@ -231,7 +214,6 @@ def order_form(request, pk):
         if available_options.exists():
             selected_option = available_options.first()
         else:
-            # Если вообще нет пакетов, возвращаем ошибку
             return HttpResponse("Для этой комиссии нет доступных пакетов.", status=404)
 
     # Дополнительные опции
@@ -249,9 +231,39 @@ def order_form(request, pk):
             user_response.customer = request.user
             user_response.commission = commission
             user_response.price = total_price
-            user_response.delivery_time = now() + timedelta(days=total_deadline)  # Дата завершения
-            user_response.description = selected_option.description  # Заполняем описание из пакета
+            user_response.delivery_time = now() + timedelta(days=total_deadline)
+            user_response.description = selected_option.description
+
+            # Сохраняем данные о пакете
+            user_response.package_type = selected_option.package_type
+            user_response.package_description = selected_option.description
+            user_response.package_price = selected_option.price
+            user_response.package_deadline = selected_option.deadline
+
             user_response.save()
+
+            # Обработка выбранных дополнительных опций
+            selected_bonus_ids = request.POST.getlist('additional_options')
+            for bonus_id in selected_bonus_ids:
+                try:
+                    bonus_option = BonusOption.objects.get(id=bonus_id)
+                    user_response.selected_bonus_options.add(bonus_option)
+                    total_price += bonus_option.price
+                    total_deadline += bonus_option.deadline
+                except BonusOption.DoesNotExist:
+                    pass
+
+            # Обновляем общую стоимость и срок выполнения
+            user_response.price = total_price
+            user_response.delivery_time = now() + timedelta(days=total_deadline)
+            user_response.save()
+
+            # Обработка файлов
+            if 'files' in request.FILES:
+                for file in request.FILES.getlist('files'):
+                    stored_file = File.objects.create(user=request.user, file=file)
+                    user_response.files.add(stored_file)
+
             return redirect('commission_success')
     else:
         form = UserResponseForm()
@@ -265,42 +277,6 @@ def order_form(request, pk):
         'total_price': total_price,
         'total_deadline': total_deadline,
     })
-
-@login_required
-def send_message(request, pk):
-    if request.method == 'POST':
-        recipient_id = request.POST.get('recipient')
-        content = request.POST.get('content')
-
-        if not content.strip():
-            return JsonResponse({'success': False, 'message': 'Текст сообщения не может быть пустым.'})
-
-        recipient = get_object_or_404(User, id=recipient_id)
-        Message.objects.create(
-            sender=request.user,
-            recipient=recipient,
-            content=content,
-        )
-
-        return JsonResponse({'success': True, 'message': 'Сообщение успешно отправлено.'})
-    return JsonResponse({'success': False, 'message': 'Неверный запрос.'})
-
-@login_required
-def artist_order_detail(request, pk):
-    order = Orders.objects.get(pk=pk)
-    messages = Message.objects.filter(chat__order=order).order_by('created_at')
-    return render(request, 'artist_order_detail.html', {'order': order, 'messages': messages})
-
-@login_required
-def customer_order_detail(request, pk):
-    order = Orders.objects.get(pk=pk)
-    messages = Message.objects.filter(chat__order=order).order_by('created_at')
-    return render(request, 'customer_order_detail.html', {'order': order, 'messages': messages})
-
-@login_required
-def my_orders(request):
-    orders = Orders.objects.filter(artist=request.user)
-    return render(request, 'my_orders.html', {'orders': orders})
 
 @login_required
 def profile(request):
@@ -423,16 +399,17 @@ def bazaar_catalog(request):
 
 @login_required
 def offer_service(request, bid_id):
-    bid = Birzha.objects.get(id=bid_id)
+    bid = get_object_or_404(Birzha, id=bid_id)  # Получаем объект Birzha
 
     if request.method == 'POST':
         form = UserResponseForm(request.POST)
         if form.is_valid():
             user_response = form.save(commit=False)
-            user_response.artist = request.user
-            user_response.customer = bid.user
-            user_response.birzha = bid
+            user_response.artist = request.user  # Художник, который откликается
+            user_response.customer = bid.user  # Заказчик, создавший биржу
+            user_response.birzha = bid  # Связываем отклик с биржей
             user_response.save()
+
             return redirect('bazaar_catalog')  # Перенаправление после успешного сохранения
     else:
         form = UserResponseForm()
@@ -495,3 +472,90 @@ def edit_profile(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, 'edit_profile.html', {'form': form})
+
+
+@login_required
+def my_orders(request):
+    birzha_responses_as_artist = UserResponse.objects.filter(artist=request.user, birzha__isnull=False)
+    birzha_responses_as_customer = UserResponse.objects.filter(customer=request.user, birzha__isnull=False)
+    commission_responses_as_artist = UserResponse.objects.filter(artist=request.user, commission__isnull=False)
+    commission_responses_as_customer = UserResponse.objects.filter(customer=request.user, commission__isnull=False)
+
+    return render(request, 'my_orders.html', {
+        'birzha_responses_as_artist': birzha_responses_as_artist,
+        'birzha_responses_as_customer': birzha_responses_as_customer,
+        'commission_responses_as_artist': commission_responses_as_artist,
+        'commission_responses_as_customer': commission_responses_as_customer,
+    })
+
+
+@login_required
+def order_detail_view(request, pk):
+    # Получаем объект UserResponse по его ID
+    response = get_object_or_404(UserResponse, pk=pk)
+
+    # Проверяем, существует ли связанный заказ
+    order = Orders.objects.filter(response=response).first()
+    messages = Message.objects.filter(chat__order=order).order_by('created_at') if order else []
+
+    # Получаем выбранный пакет из UserResponse
+    selected_option = None
+    additional_options = []
+    if response.commission:
+        try:
+            # Получаем выбранный пакет через package_type
+            selected_option = response.commission.options.get(package_type=response.package_type)
+        except Option.DoesNotExist:
+            pass
+
+    # Дополнительные опции (если есть)
+    if response.commission:
+        additional_options = BonusOption.objects.filter(commission=response.commission)
+
+    # Обработка POST-запросов
+    if request.method == 'POST':
+        if 'accept_order' in request.POST and not order:
+            if request.user == response.commission.user or request.user == response.birzha.user:
+                order = Orders.objects.create(
+                    artist=response.artist,
+                    customer=response.customer,
+                    response=response,
+                    price=response.price,
+                    description=response.description,
+                    deadline=timezone.now().date() + timezone.timedelta(days=response.delivery_time),
+                    status='discussion'
+                )
+                return redirect('order_detail', pk=response.id)
+
+        elif 'reject_order' in request.POST and not order:
+            response.delete()
+            return redirect('my_orders')
+
+    return render(request, 'order_detail.html', {
+        'response': response,
+        'order': order,
+        'messages': messages,
+        'selected_option': selected_option,
+        'additional_options': additional_options,
+    })
+@login_required
+def send_message(request, order_id):
+    order = get_object_or_404(Orders, id=order_id)
+
+    if request.user not in [order.customer, order.artist]:
+        return redirect('order_detail', response_id=order.response.id)
+
+    chat, created = Chat.objects.get_or_create(order=order)
+    if created:
+        chat.participants.set([order.customer, order.artist])
+
+    if request.method == 'POST':
+        text = request.POST.get('content', '').strip()
+        if text:
+            Message.objects.create(
+                chat=chat,
+                sender=request.user,
+                text=text
+            )
+    return redirect('order_detail', response_id=order.response.id)
+

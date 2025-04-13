@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'djoser',
     'main',
     'django_filters',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -79,7 +80,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'FQW.wsgi.application'
+# WSGI_APPLICATION = 'FQW.wsgi.application'
+ASGI_APPLICATION = 'FQW.asgi.application'
 
 
 # Database
@@ -156,3 +158,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Настройка брокера сообщений (Redis)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],  # Убедитесь, что Redis запущен на этом адресе
+        },
+    },
+}
+
+LOGIN_REDIRECT_URL = 'home'
+
+
