@@ -101,14 +101,43 @@ class Orders(models.Model):
     def __str__(self):
         return f"Заказ #{self.id} ({self.get_status_display()})"
 
+    def start_work(self):
+        self.status = 'in_work'
+        self.save()
+
+    def cancel_by_artist(self):
+        self.status = 'cancelled'
+        self.save()
+        # Логика уведомления заказчика
+
+    def submit_for_review(self, files, comment):
+        deliver = Delivers.objects.create(
+            order=self,
+            artist=self.artist,
+            images=files,
+            comment=comment
+        )
+        self.status = 'on_review'
+        self.save()
+
+    def accept_order(self):
+        self.status = 'accepted'
+        self.save()
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
+
+
 # Модель доставки заказа
 class Delivers(models.Model):
-    order = models.ForeignKey(Orders, on_delete=models.CASCADE)
+    order = models.ForeignKey(Orders, on_delete=models.CASCADE, related_name='delivers')
     artist = models.ForeignKey(User, on_delete=models.CASCADE)
     images = models.ManyToManyField('ImageStorage', blank=True)
     files = models.ManyToManyField('File', blank=True)
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
         return f"Доставка для заказа #{self.order.id}"
@@ -124,6 +153,17 @@ class Revisions(models.Model):
 
     def __str__(self):
         return f"Правка #{self.delivery.id}"
+
+class Review(models.Model):
+    order = models.ForeignKey(Orders, on_delete=models.CASCADE)
+    customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    communication_rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    result_rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    recommend_rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    comment = models.TextField()
+    image = models.ImageField(upload_to='reviews/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
 
 # Модель биржи заказов
 class Birzha(models.Model):
@@ -232,7 +272,7 @@ class UserResponse(models.Model):
 
 # Модель чата
 class Chat(models.Model):
-    order = models.ForeignKey(Orders, on_delete=models.CASCADE, null=True, blank=True)
+    order = models.OneToOneField(Orders, on_delete=models.CASCADE, related_name='chat', null=True, blank=True)
     participants = models.ManyToManyField(User)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -244,6 +284,7 @@ class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
+    images = models.ManyToManyField('ImageStorage', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -318,4 +359,28 @@ class FavoriteCommission(models.Model):
 class FavoriteArtist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_artists')
     artist = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorited_by_users')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notifications'  # Добавьте эту строку
+    )
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Уведомление для {self.user.username}"
+
+class RevisionRequest(models.Model):
+    order = models.ForeignKey(
+        Orders,
+        on_delete=models.CASCADE,
+        related_name='revision_requests'
+    )
+    customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)

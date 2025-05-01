@@ -123,18 +123,33 @@
           <div class="border p-3 mb-4" style="max-height: 300px; overflow-y: auto;">
             {% for message in messages %}
               <p><strong>{{ message.sender.username }}</strong>: {{ message.text }}</p>
+              {% if message.images.exists %}
+                <div class="message-images">
+                  {% for image in message.images.all %}
+                    <img src="{{ image.image.url }}" class="img-thumbnail" style="max-width: 300px;">
+                  {% endfor %}
+                </div>
+              {% endif %}
             {% empty %}
               <p>Пока нет сообщений.</p>
             {% endfor %}
-          </div>
 
+            <!-- Вывод правок -->
+            {% for revision in order.revision_requests.all %}
+              <div class="alert alert-warning">
+                <strong>Правки от {{ revision.customer.username }}:</strong>
+                <p>{{ revision.comment }}</p>
+                <small>{{ revision.created_at|timesince }} назад</small>
+              </div>
+            {% endfor %}
+
+          <!-- Форма отправки сообщения -->
           <form id="chat-form" method="post" action="{% url 'send_message' order.id %}">
             {% csrf_token %}
             <textarea name="content" rows="3" class="form-control mb-2" required></textarea>
             <button class="btn btn-secondary">Отправить</button>
           </form>
         {% endif %}
-      </div>
 
       <div class="col-md-4">
         <!-- Панель статусов -->
@@ -164,9 +179,129 @@
             </div>
           </div>
         </div>
+         <!-- Блок кнопок управления заказом -->
+        <div class="mt-4">
+          {% if user == order.artist %}
+            {% if order.status == 'discussion' %}
+              <form method="post" action="{% url 'start_work' response.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-primary">Приступить к заказу</button>
+              </form>
+              <!-- Кнопка "Изменить заказ" -->
+             <a href="{% url 'edit_order' order.response.pk %}" class="btn btn-secondary">Изменить заказ</a>
+              <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                Отказаться
+              </button>
+            {% elif order.status == 'in_work' %}
+              <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#submitDeliveryModal">
+                Сдать заказ
+              </button>
+              <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                Отменить заказ
+              </button>
+            {% endif %}
+          {% endif %}
+          <!-- Кнопки для заказчика при статусе "на проверке" -->
+          {% if user == order.customer and order.status == 'on_review' %}
+          <form method="post">
+              {% csrf_token %}
+              <button name="accept_order_customer" class="btn btn-success me-2">
+                  Принять работу
+              </button>
+          </form>
+          <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#requestRevisionsModal">
+              Запросить правки
+          </button>
+          {% endif %}
+        </div>
       </div>
     </div>
   {% endif %}
+</div>
+
+<!-- Модальные окна -->
+<!-- Модальное окно сдачи заказа -->
+<div class="modal fade" id="submitDeliveryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" enctype="multipart/form-data" action="{% url 'submit_delivery' order.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Сдать заказ на проверку</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Файлы работы</label>
+            <input type="file" name="images" multiple accept="image/*, .psd" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Комментарий</label>
+            <textarea name="comment" class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Отправить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно запроса правок -->
+<div class="modal fade" id="requestRevisionsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'request_revisions' order.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Запросить правки</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Описание правок</label>
+            <textarea name="comment" class="form-control" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning">Отправить правки</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно отмены заказа -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'cancel_order' order.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Отмена заказа</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Причина отмены</label>
+            <select name="reason" class="form-select" required>
+              <option value="style">Не устраивает стиль исполнения</option>
+              <option value="tz">Не соблюдение ТЗ</option>
+              <option value="other">Другое</option>
+            </select>
+          </div>
+          <div class="mb-3" id="otherReasonField" style="display: none;">
+            <label class="form-label">Уточнение</label>
+            <textarea name="other_reason" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">Подтвердить отмену</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <!-- Стили для подсветки текущего статуса -->
@@ -177,4 +312,12 @@
     font-weight: bold; /* Жирный текст */
   }
 </style>
+<!-- Скрипты для обработки модальных окон -->
+<script>
+  // Показ поля для другой причины отмены
+  document.querySelector('#cancelOrderModal select[name="reason"]').addEventListener('change', function() {
+    const otherField = document.getElementById('otherReasonField');
+    otherField.style.display = this.value === 'other' ? 'block' : 'none';
+  });
+</script>
 {% endblock %}

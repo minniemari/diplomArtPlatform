@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Оставить отзыв</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <img src="{{ last_delivery_image }}" alt="Работа" class="img-fluid mb-3">
+    </div>
+
+    <div class="rating mb-3">
+        <h5>Коммуникация</h5>
+        <div class="stars" data-field="communication">
+            {% for i in "12345" %}
+            <span class="star" data-value="{{ i }}">★</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="rating mb-3">
+        <h5>Результат</h5>
+        <div class="stars" data-field="result">
+            {% for i in "12345" %}
+            <span class="star" data-value="{{ i }}">★</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="rating mb-3">
+        <h5>Рекомендация</h5>
+        <div class="stars" data-field="recommend">
+            {% for i in "12345" %}
+            <span class="star" data-value="{{ i }}">★</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <input type="hidden" name="communication_rating" id="communication_rating">
+    <input type="hidden" name="result_rating" id="result_rating">
+    <input type="hidden" name="recommend_rating" id="recommend_rating">
+
+    <div class="mb-3">
+        <label for="id_comment" class="form-label">Комментарий</label>
+        <textarea class="form-control" id="id_comment" name="comment" rows="3" required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Оставить отзыв</button>
+</form>
+
+<script>
+document.querySelectorAll('.stars').forEach(container => {
+    const field = container.dataset.field;
+    container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('star')) {
+            const value = e.target.dataset.value;
+            document.getElementById(`${field}_rating`).value = value;
+            container.querySelectorAll('.star').forEach(star => {
+                star.style.color = star.dataset.value <= value ? '#ffcc00' : '#ddd';
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

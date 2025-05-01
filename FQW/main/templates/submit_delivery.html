@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Сдать заказ на проверку</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_images" class="form-label">Работы (изображения/PSD)</label>
+        <input class="form-control" type="file" id="id_images" name="images" multiple accept="image/*, .psd" required>
+    </div>
+    <div class="mb-3">
+        <label for="id_comment" class="form-label">Комментарий</label>
+        <textarea class="form-control" id="id_comment" name="comment" rows="3" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Отправить на проверку</button>
+</form>
+{% endblock %}

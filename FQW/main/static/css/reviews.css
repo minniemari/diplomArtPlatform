@@ -1,0 +1,18 @@
+.star {
+    cursor: pointer;
+    font-size: 2em;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.star:hover {
+    color: #ffcc00;
+}
+
+.rating {
+    margin-bottom: 1rem;
+}
+
+.rating h5 {
+    margin-bottom: 0.5rem;
+}

@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import login
+from itertools import chain
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
 from .forms import *
 from .models import *
 from django.db.models import Min
@@ -284,6 +287,7 @@ def profile(request):
     user_profile = get_object_or_404(Profile, user=request.user)
     return render(request, 'profile.html', {'profile': user_profile})
 
+
 @login_required
 def create_bid(request):
     if request.method == 'POST':
@@ -445,7 +449,7 @@ def add_portfolio(request):
             portfolio = form.save(commit=False)
             portfolio.user = request.user
             portfolio.save()
-            return redirect('profile')  # Перенаправление на страницу профиля
+            return redirect('profile',username=request.user.username)  # Перенаправление на страницу профиля
     else:
         form = PortfolioForm()
     return render(request, 'add_portfolio.html', {'form': form})
@@ -461,6 +465,7 @@ def profile_detail(request, username):
     }
     return render(request, 'profile.html', context)
 
+
 @login_required
 def edit_profile(request):
     profile = request.user.profile
@@ -468,11 +473,16 @@ def edit_profile(request):
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect('profile')
+            return redirect('profile', username=request.user.username)  # Перенаправляем на страницу профиля
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'edit_profile.html', {'form': form})
 
+    # Если форма не валидна или это GET-запрос
+    context = {
+        'profile': profile,
+        'form': form
+    }
+    return render(request, 'profile.html', context)  # Всегда рендерим profile.html
 
 @login_required
 def my_orders(request):
@@ -497,6 +507,16 @@ def order_detail_view(request, pk):
     # Проверяем, существует ли связанный заказ
     order = Orders.objects.filter(response=response).first()
     messages = Message.objects.filter(chat__order=order).order_by('created_at') if order else []
+    revisions = RevisionRequest.objects.filter(order=order).order_by('created_at') if order else []
+
+    # Объединяем сообщения и правки в один временной ряд
+    timeline = sorted(
+        chain(
+            messages.annotate(type=models.Value('message', output_field=models.CharField())),
+            revisions.annotate(type=models.Value('revision', output_field=models.CharField()))
+        ),
+        key=lambda x: x.created_at
+    )
 
     # Получаем выбранный пакет из UserResponse
     selected_option = None
@@ -516,17 +536,25 @@ def order_detail_view(request, pk):
     if request.method == 'POST':
         if 'accept_order' in request.POST and not order:
             if request.user == response.commission.user or request.user == response.birzha.user:
-                order = Orders.objects.create(
-                    artist=response.artist,
-                    customer=response.customer,
+                # Используйте get_or_create
+                order, created = Orders.objects.get_or_create(
                     response=response,
-                    price=response.price,
-                    description=response.description,
-                    deadline=timezone.now().date() + timezone.timedelta(days=response.delivery_time),
-                    status='discussion'
+                    defaults={
+                        'artist': response.artist,
+                        'customer': response.customer,
+                        'price': response.price,
+                        'description': response.description,
+                        'deadline': timezone.now().date() + timezone.timedelta(days=response.delivery_time),
+                        'status': 'discussion'
+                    }
                 )
-                return redirect('order_detail', pk=response.id)
-
+                return redirect('order_detail', pk=response.pk)
+        # Для заказчика: принятие заказа
+        elif 'accept_order_customer' in request.POST:
+            if order and request.user == order.customer and order.status == 'on_review':
+                order.status = 'accepted'
+                order.save()
+                return redirect('leave_review', pk=order.id)
         elif 'reject_order' in request.POST and not order:
             response.delete()
             return redirect('my_orders')
@@ -538,6 +566,7 @@ def order_detail_view(request, pk):
         'selected_option': selected_option,
         'additional_options': additional_options,
     })
+
 @login_required
 def send_message(request, order_id):
     order = get_object_or_404(Orders, id=order_id)
@@ -559,3 +588,211 @@ def send_message(request, order_id):
             )
     return redirect('order_detail', response_id=order.response.id)
 
+login_required
+def order_actions(request, pk):
+    order = get_object_or_404(Orders, pk=pk)
+    if request.user not in [order.artist, order.customer]:
+        return HttpResponseForbidden()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'start_work' and order.status == 'discussion':
+            order.status = 'in_work'
+            order.save()
+        elif action == 'submit_review' and order.status == 'in_work':
+            return redirect('submit_delivery', pk=pk)
+        # Добавлены остальные действия...
+
+
+@login_required
+def submit_delivery(request, pk):
+    order = get_object_or_404(Orders, pk=pk, artist=request.user)
+    chat, created = Chat.objects.get_or_create(order=order)  # Создаем чат, если не существует
+
+    if request.method == 'POST':
+        files = request.FILES.getlist('images')
+        comment = request.POST.get('comment')
+
+        # Создаем сообщение с изображениями
+        message = Message.objects.create(
+            chat=chat,  # Теперь это экземпляр Chat
+            sender=request.user,
+            text=comment
+        )
+
+        # Сохраняем изображения
+        for file in files:
+            image = ImageStorage.objects.create(image=file)
+            message.images.add(image)
+
+        # Обновляем статус заказа
+        order.status = 'on_review'
+        order.save()
+
+        return redirect('order_detail', pk=pk)
+
+    return render(request, 'submit_delivery.html', {'order': order})
+
+@login_required
+def leave_review(request, pk):
+    order = get_object_or_404(Orders, pk=pk, customer=request.user, status='accepted')
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.order = order
+            review.customer = request.user
+            review.image = order.delivers.last().images.first().image
+            review.save()
+            order.status = 'accepted'
+            order.save()
+            # Обновление рейтинга художника
+            artist_profile = order.artist.profile
+            average_rating = (review.communication_rating + review.result_rating + review.recommend_rating) / 3
+            artist_profile.ratings = (artist_profile.ratings + average_rating) / 2
+            artist_profile.save()
+            return redirect('profile_detail', username=order.artist.username)
+    else:
+        form = ReviewForm()
+    return render(request, 'leave_review.html', {'form': form})
+
+@login_required
+def dispute_chat(request, pk):
+    dispute = get_object_or_404(DisputeChat, pk=pk)
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        DisputeMessage.objects.create(
+            dispute_chat=dispute,
+            sender=request.user,
+            text=message
+        )
+    messages = DisputeMessage.objects.filter(dispute_chat=dispute)
+    return render(request, 'dispute_chat.html', {'messages': messages, 'dispute': dispute})
+
+
+@login_required
+def cancel_order(request, pk):
+    order = get_object_or_404(Orders, pk=pk)
+    if request.method == 'POST':
+        form = CancelOrderForm(request.POST)
+        if form.is_valid():
+            reason = form.cleaned_data['reason']
+            other_reason = form.cleaned_data['other_reason']
+
+            # Создаем запись об отмене
+            OrderCancellation.objects.create(
+                order=order,
+                cancelled_by=request.user,
+                reason=other_reason if reason == 'other' else reason
+            )
+
+            # Обновляем статус заказа
+            order.status = 'cancelled'
+            order.save()
+
+            # Уведомляем участников
+            participants = [order.artist, order.customer]
+            message = f"Заказ #{order.id} отменен: {reason}"
+            if reason == 'other':
+                message += f" ({other_reason})"
+
+            for user in participants:
+                Notification.objects.create(
+                    user=user,
+                    message=message
+                )
+
+            return redirect('order_detail', pk=order.response.id)
+    else:
+        form = CancelOrderForm()
+
+    return render(request, 'cancel_order.html', {'form': form, 'order': order})
+
+class NotificationListView(LoginRequiredMixin, ListView):
+    model = Notification
+    template_name = 'notifications_list.html'
+    context_object_name = 'notifications'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return self.request.user.notifications.all()
+
+def some_view(request):
+    # Пример создания уведомления
+    Notification.objects.create(
+        user=request.user,
+        message="Ваш заказ был обновлен"
+    )
+
+
+@login_required
+def request_revisions(request, pk):
+    order = get_object_or_404(Orders, pk=pk, customer=request.user, status='on_review')
+
+    if request.method == 'POST':
+        comment = request.POST.get('comment')
+        # Создаем запрос на правки
+        RevisionRequest.objects.create(
+            order=order,
+            customer=request.user,
+            comment=comment
+        )
+
+        # Обновляем статус заказа
+        order.status = 'in_work'
+        order.save()
+
+        # Уведомляем художника
+        Notification.objects.create(
+            user=order.artist,
+            message=f"Заказчик запросил правки к заказу #{order.id}"
+        )
+
+        return redirect('order_detail', pk=pk)
+
+    return redirect('order_detail', pk=pk)
+
+
+@login_required
+def start_work(request, pk):
+    response = get_object_or_404(UserResponse, pk=pk, artist=request.user)
+    # Используйте get_or_create
+    order, created = Orders.objects.get_or_create(
+        response=response,
+        defaults={
+            'artist': request.user,
+            'customer': response.customer,
+            'price': response.price,
+            'deadline': timezone.now().date() + timezone.timedelta(days=response.delivery_time),
+            'status': 'discussion'
+        }
+    )
+    if not created:
+        # Если заказ уже существует, обновите статус
+        order.status = 'in_work'
+        order.save()
+    return redirect('order_detail', pk=response.pk)
+
+@login_required
+def edit_response(request, pk):
+    response = get_object_or_404(UserResponse, pk=pk, artist=request.user)
+    if request.method == 'POST':
+        form = UserResponseForm(request.POST, instance=response)
+        if form.is_valid():
+            form.save()
+            return redirect('order_detail', pk=pk)
+    else:
+        form = UserResponseForm(instance=response)
+    return render(request, 'edit_response.html', {'form': form})
+
+@login_required
+def edit_order(request, pk):
+    response = get_object_or_404(UserResponse, pk=pk, artist=request.user)
+    if request.method == 'POST':
+        form = UserResponseForm(request.POST, instance=response)
+        if form.is_valid():
+            form.save()
+            return redirect('order_detail', pk=pk)
+    else:
+        form = UserResponseForm(instance=response)
+    return render(request, 'edit_order.html', {'form': form})

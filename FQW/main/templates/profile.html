@@ -150,48 +150,80 @@
               </div>
               <button type="submit" class="btn btn-primary">Добавить работу</button>
             </form>
+            <h5>Отзывы</h5>
+            <ul>
+              {% for review in profile.user.reviews_received.all %}
+                <li>
+                  <img src="{{ review.customer.profile.image.url }}" alt="">
+                  <p>{{ review.comment }}</p>
+                  <div>Оценка: {{ review.rating }}/5</div>
+                </li>
+              {% empty %}
+                <p>Нет отзывов</p>
+              {% endfor %}
+            </ul>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Модальное окно для редактирования профиля -->
-    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editProfileModalLabel">Редактирование профиля</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data">
-              {% csrf_token %}
-              <div class="mb-3">
-                <label for="id_specialization" class="form-label">Специализация</label>
-                <input type="text" id="id_specialization" name="specialization" value="{{ profile.specialization }}" class="form-control">
-              </div>
-              <div class="mb-3">
-                <label for="id_description" class="form-label">Описание</label>
-                <textarea id="id_description" name="description" rows="4" class="form-control">{{ profile.description }}</textarea>
-              </div>
-              <div class="mb-3">
-                <label for="id_image" class="form-label">Аватар</label>
-                <input type="file" id="id_image" name="image" class="form-control">
-              </div>
-              <div class="mb-3">
-                <label for="id_skills" class="form-label">Навыки</label>
-                <select id="id_skills" name="skills" multiple class="form-select">
-                  {% for skill in all_skills %}
-                    <option value="{{ skill.id }}" {% if skill in profile.skills.all %}selected{% endif %}>{{ skill.name }}</option>
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Редактирование профиля</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- Блок для отображения ошибок -->
+          {% if form.errors %}
+            <div class="alert alert-danger">
+              <ul>
+                {% for field in form %}
+                  {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
                   {% endfor %}
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary">Сохранить</button>
-            </form>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          <!-- Поля формы -->
+          <div class="mb-3">
+            <label class="form-label">Специализация</label>
+            <input type="text" name="specialization" value="{{ form.specialization.value|default:profile.specialization }}" class="form-control">
           </div>
-        </div>
+          <div class="mb-3">
+            <label class="form-label">Описание</label>
+            <textarea name="description" class="form-control" rows="4">{{ form.description.value|default:profile.description }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Аватар</label>
+            <input type="file" name="image" class="form-control">
+            {% if profile.image %}
+              <img src="{{ profile.image.url }}" alt="Текущий аватар" class="mt-2 img-thumbnail" style="max-width: 200px;">
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Навыки</label>
+            <select name="skills" class="form-select" multiple>
+              {% for skill in all_skills %}
+                <option value="{{ skill.id }}" {% if skill in profile.skills.all %}selected{% endif %}>
+                  {{ skill.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
       </div>
     </div>
+  </div>
+</div>
 
 {% endblock %}
 

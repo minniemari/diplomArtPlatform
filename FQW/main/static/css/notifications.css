@@ -1,0 +1,17 @@
+.dropdown-menu {
+    max-width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+    background-color: #fff3cd;
+}

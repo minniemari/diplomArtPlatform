@@ -126,3 +126,16 @@ class ProfileForm(forms.ModelForm):
         widgets = {
             'skills': forms.SelectMultiple(),
         }
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review  # Используем правильную модель
+        fields = ['communication_rating', 'result_rating', 'recommend_rating', 'comment']
+
+class CancelOrderForm(forms.Form):
+    reason = forms.ChoiceField(choices=[
+        ('style', 'Не устраивает стиль'),
+        ('tz', 'Не соблюдено ТЗ'),
+        ('other', 'Другое'),
+    ])
+    other_reason = forms.CharField(required=False)
