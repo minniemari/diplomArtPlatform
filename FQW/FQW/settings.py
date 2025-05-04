@@ -46,6 +46,10 @@ INSTALLED_APPS = [
     'main',
     'django_filters',
     'channels',
+    'django_celery_beat',
+    'django_celery_results',
+    'kombu.transport.sqlalchemy',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +88,10 @@ TEMPLATES = [
 # WSGI_APPLICATION = 'FQW.wsgi.application'
 ASGI_APPLICATION = 'FQW.asgi.application'
 
+CELERY_BROKER_URL =  f"sqlalchemy+sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}"  # Используем базу данных как брокер
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -155,20 +163,12 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Настройка брокера сообщений (Redis)
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],  # Убедитесь, что Redis запущен на этом адресе
-        },
-    },
-}
 
 LOGIN_REDIRECT_URL = 'home'
 

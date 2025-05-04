@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block content %}
 <div class="container mt-5">
   <h2>Детали заказа</h2>
 
-  <!-- Основная информация о заказе -->
+  <!-- Блок для несозданного заказа -->
   {% if not order %}
     <div class="card mb-4">
       <div class="card-body">
@@ -19,57 +18,46 @@
         <p><strong>Техническое задание:</strong> {{ response.technical_task|default:"Не указано" }}</p>
         <p><strong>Цена:</strong> {{ response.price }}₽</p>
         <p><strong>Срок:</strong> {{ response.delivery_time }} дней</p>
-
         <p><span class="badge bg-secondary">Ожидает подтверждения</span></p>
 
-        <!-- Кнопки управления заказом -->
-        {% if response.commission and request.user == response.commission.user %}
-          <form method="post">
-            {% csrf_token %}
-            <button name="accept_order" class="btn btn-success me-2">Принять заказ</button>
-            <button name="reject_order" class="btn btn-danger">Отклонить заказ</button>
-          </form>
-        {% elif response.birzha and request.user == response.birzha.user %}
+        <!-- Кнопки управления -->
+        {% if user == response.commission.user or user == response.birzha.user %}
           <form method="post">
             {% csrf_token %}
             <button name="accept_order" class="btn btn-success me-2">Принять заказ</button>
             <button name="reject_order" class="btn btn-danger">Отклонить заказ</button>
           </form>
         {% else %}
-          <p>Вы не можете управлять этим заказом.</p>
+          <p>Вы не можете управлять этим заказом</p>
         {% endif %}
       </div>
     </div>
   {% endif %}
 
-  <!-- Панель статусов и дополнительной информации (отображается только если заказ существует) -->
+  <!-- Блок для существующего заказа -->
   {% if order %}
     <div class="row">
+      <!-- Основная колонка (слева) -->
       <div class="col-md-8">
-        <!-- Дополнительная информация о заказе -->
+        <!-- Информация о заказе -->
         <div class="card mb-4">
           <div class="card-body">
-            <h5>Название заказа:
-              {% if response.commission %}
-                {{ response.commission.title }}
-              {% elif response.birzha %}
-                {{ response.birzha.title }}
-              {% endif %}
-            </h5>
+            <h5>Статус заказа: {{ order.get_status_display }}</h5>
             <p><strong>Техническое задание:</strong> {{ response.technical_task|default:"Не указано" }}</p>
-            <p><strong>Стоимость:</strong> {{ order.price }}₽</p>
+            <p>Стоимость: <span class="price">{{ order.price }}</span> ₽</p>
             <p><strong>Срок исполнения:</strong> {{ order.deadline|date:"d.m.Y" }}</p>
 
             <!-- Прикрепленные файлы -->
-            {% if response.files.all %}
-              <p><strong>Прикрепленные файлы:</strong></p>
-              <ul>
-                {% for file in response.files.all %}
-                  <li><a href="{{ file.file.url }}">{{ file.filename }}</a></li>
-                {% endfor %}
-              </ul>
+            {% if response.files.exists %}
+              <div class="mt-3">
+                <strong>Прикрепленные файлы:</strong>
+                <ul class="list-unstyled">
+                  {% for file in response.files.all %}
+                    <li><a href="{{ file.file.url }}">{{ file.filename }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
             {% endif %}
-
             <!-- Информация о выбранном пакете -->
             {% if selected_option %}
               <p><strong>Выбранный пакет:</strong> {{ selected_option.get_package_type_display }}</p>
@@ -118,47 +106,57 @@
         </div>
 
         <!-- Чат -->
-        {% if request.user == order.artist or request.user == order.customer %}
-          <h4>Чат</h4>
-          <div class="border p-3 mb-4" style="max-height: 300px; overflow-y: auto;">
-            {% for message in messages %}
-              <p><strong>{{ message.sender.username }}</strong>: {{ message.text }}</p>
-              {% if message.images.exists %}
-                <div class="message-images">
-                  {% for image in message.images.all %}
-                    <img src="{{ image.image.url }}" class="img-thumbnail" style="max-width: 300px;">
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% empty %}
-              <p>Пока нет сообщений.</p>
-            {% endfor %}
-
-            <!-- Вывод правок -->
-            {% for revision in order.revision_requests.all %}
-              <div class="alert alert-warning">
-                <strong>Правки от {{ revision.customer.username }}:</strong>
-                <p>{{ revision.comment }}</p>
-                <small>{{ revision.created_at|timesince }} назад</small>
+        {% if user == order.artist or user == order.customer %}
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5>Чат</h5>
+              <div style="max-height: 400px; overflow-y: auto;">
+                {% for message in messages %}
+                  <div class="mb-3">
+                    <strong>{{ message.sender.username }}:</strong>
+                    <p>{{ message.text }}</p>
+                    {% if message.images.exists %}
+                      <div class="d-flex gap-2">
+                        {% for image in message.images.all %}
+                          <img src="{{ image.image.url }}" class="img-thumbnail" style="max-width: 200px;">
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% empty %}
+                  <p>Пока нет сообщений</p>
+                {% endfor %}
               </div>
-            {% endfor %}
-
-          <!-- Форма отправки сообщения -->
-          <form id="chat-form" method="post" action="{% url 'send_message' order.id %}">
-            {% csrf_token %}
-            <textarea name="content" rows="3" class="form-control mb-2" required></textarea>
-            <button class="btn btn-secondary">Отправить</button>
-          </form>
+                <!-- Вывод правок -->
+                {% for revision in order.revision_requests.all %}
+                  <div class="alert alert-warning">
+                    <strong>Правки от {{ revision.customer.username }}:</strong>
+                    <p>{{ revision.comment }}</p>
+                    <small>{{ revision.created_at|timesince }} назад</small>
+                  </div>
+                {% endfor %}
+              <!-- Форма отправки сообщения -->
+              <form method="post" action="{% url 'send_message' order.id %}" class="mt-3">
+                {% csrf_token %}
+                <div class="input-group">
+                  <textarea name="content" class="form-control" rows="2" required></textarea>
+                  <button class="btn btn-secondary" type="submit">Отправить</button>
+                </div>
+              </form>
+            </div>
+          </div>
         {% endif %}
+      </div>
 
+      <!-- Правая колонка -->
       <div class="col-md-4">
-        <!-- Панель статусов -->
+        <!-- Блок статусов -->
         <div class="card mb-4">
           <div class="card-body">
-            <h5>Статусы заказа</h5>
+            <h5>Статус заказа</h5>
             <ul class="list-group list-group-flush">
-              {% for status, label in order.STATUS_CHOICES %}
-                <li class="list-group-item {% if status == order.status %}active-status{% endif %}">
+              {% for value, label in order.STATUS_CHOICES %}
+                <li class="list-group-item {% if value == order.status %}active-status{% endif %}">
                   {{ label }}
                 </li>
               {% endfor %}
@@ -166,53 +164,124 @@
           </div>
         </div>
 
-        <!-- Информация об исполнителе -->
+        <!-- Блок исполнителя -->
         <div class="card mb-4">
           <div class="card-body">
             <h5>Исполнитель</h5>
-            <div class="d-flex align-items-center">
-              <img src="{% if order.artist.profile.image %}{{ order.artist.profile.image.url }}{% else %}{% static 'default_avatar.png' %}{% endif %}" alt="Аватар исполнителя" class="rounded-circle me-2" style="width: 40px; height: 40px;">
-              <div>
-                <p>{{ order.artist.username }}</p>
-                <p>Рейтинг: {{ order.artist.profile.ratings }}</p>
+            <a href="{% url 'profile_detail' username=order.artist.username %}" class="text-decoration-none">
+              <div class="d-flex align-items-center">
+                <img src="{% if order.artist.profile.image %}{{ order.artist.profile.image.url }}{% else %}{% static 'default_avatar.png' %}{% endif %}"
+                     class="rounded-circle me-3" style="width: 50px; height: 50px;">
+                <div>
+                  <p class="mb-0">{{ order.artist.username }}</p>
+                  <small class="text-muted">Рейтинг: {{ order.artist.profile.ratings|default:"Нет" }}</small>
+                </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
-         <!-- Блок кнопок управления заказом -->
-        <div class="mt-4">
-          {% if user == order.artist %}
-            {% if order.status == 'discussion' %}
-              <form method="post" action="{% url 'start_work' response.pk %}">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-primary">Приступить к заказу</button>
-              </form>
-              <!-- Кнопка "Изменить заказ" -->
-             <a href="{% url 'edit_order' order.response.pk %}" class="btn btn-secondary">Изменить заказ</a>
-              <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
-                Отказаться
-              </button>
-            {% elif order.status == 'in_work' %}
-              <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#submitDeliveryModal">
-                Сдать заказ
-              </button>
+
+        <!-- Блок управления заказом -->
+        <div class="card mb-4">
+          <div class="card-body">
+            {% if user == order.artist %}
+              {% if order.status == 'discussion' and not order.has_active_dispute %}
+                <form method="post" action="{% url 'start_work' response.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Приступить к заказу</button>
+                </form>
+                <!-- Кнопка "Изменить заказ" -->
+               <a href="{% url 'edit_order' order.response.pk %}" class="btn btn-secondary">Изменить заказ</a>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                  Отказаться
+                </button>
+              {% elif order.status == 'in_work' %}
+                <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#submitDeliveryModal">
+                  Сдать заказ
+                </button>
+              {% endif %}
+              {% if order.status == 'in_work' %}
+                  {% if order.revision_requests.exists %}
+                    {% with revision=order.revision_requests.last %}
+                      {% if not order.has_active_dispute %}
+                        <div class="d-flex gap-2">
+                          <a href="{% url 'handle_revision' revision.id 'accept' %}" class="btn btn-success">Принять правки</a>
+                          <a href="{% url 'handle_revision' revision.id 'dispute' %}" class="btn btn-danger">Оспорить правки</a>
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+                  {% endif %}
+              {% endif %}
+              {% if order.has_active_dispute %}
+                {% if dispute and order.status == 'discussion' %}
+                  <a href="{% url 'dispute_chat' dispute.id %}" class="btn btn-primary">Перейти к спору</a>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+
+            {% if user == order.customer and order.status == 'discussion' %}
+              {% if order.has_active_dispute %}
+                  {% if dispute %}
+                    <a href="{% url 'dispute_chat' dispute.id %}" class="btn btn-primary">Перейти к спору</a>
+                  {% endif %}
+              {% endif %}
+            {% endif %}
+            {% if user == order.customer and order.status == 'in_work' and order.can_cancel %}
               <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                 Отменить заказ
               </button>
             {% endif %}
-          {% endif %}
-          <!-- Кнопки для заказчика при статусе "на проверке" -->
-          {% if user == order.customer and order.status == 'on_review' %}
-          <form method="post">
-              {% csrf_token %}
-              <button name="accept_order_customer" class="btn btn-success me-2">
-                  Принять работу
+            {% if order.status == 'on_review' %}
+              <h3>Готовые работы</h3>
+
+              {% for deliver in delivers %}
+                <div class="card mb-4">
+                  <div class="card-body">
+                    <p><strong>Комментарий:</strong> {{ deliver.comment }}</p>
+
+                    <!-- Изображения -->
+                    {% if deliver.images.exists %}
+                      <div class="d-flex flex-wrap gap-2 mt-3">
+                        {% for image in deliver.images.all %}
+                          <a href="#" data-bs-toggle="modal" data-bs-target="#viewImageModal" data-image="{{ image.image.url }}">
+                            <img src="{{ image.image.url }}" class="img-thumbnail" style="width: 100px;">
+                          </a>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+
+                    <!-- Файлы -->
+                    {% if deliver.files.exists %}
+                      <div class="mt-3">
+                        <strong>Файлы:</strong>
+                        <ul class="list-unstyled">
+                          {% for file in deliver.files.all %}
+                            <li>
+                              <a href="{{ file.file.url }}" class="btn btn-sm btn-secondary" download>
+                                {{ file.filename }}
+                              </a>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            {% endif %}
+            <!-- Кнопки для заказчика при статусе "на проверке" -->
+            {% if user == order.customer and order.status == 'on_review' %}
+              <form method="post">
+                  {% csrf_token %}
+                  <button name="accept_order_customer" class="btn btn-success me-2">
+                      Принять работу
+                  </button>
+              </form>
+              <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#requestRevisionsModal">
+                  Запросить правки
               </button>
-          </form>
-          <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#requestRevisionsModal">
-              Запросить правки
-          </button>
-          {% endif %}
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
@@ -227,13 +296,13 @@
       <form method="post" enctype="multipart/form-data" action="{% url 'submit_delivery' order.id %}">
         {% csrf_token %}
         <div class="modal-header">
-          <h5 class="modal-title">Сдать заказ на проверку</h5>
+          <h5 class="modal-title">Сдать заказ</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Файлы работы</label>
-            <input type="file" name="images" multiple accept="image/*, .psd" required>
+            <input type="file" name="images" multiple class="form-control" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Комментарий</label>
@@ -265,51 +334,123 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-warning">Отправить правки</button>
+          <button type="submit" class="btn btn-warning">Отправить</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Модальное окно отмены заказа -->
 <div class="modal fade" id="cancelOrderModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="post" action="{% url 'cancel_order' order.id %}">
-        {% csrf_token %}
-        <div class="modal-header">
-          <h5 class="modal-title">Отмена заказа</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Причина отмены</label>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="post" action="{% url 'cancel_order' order.id %}">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title">Подтверждение отмены</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Вы уверены, что хотите отменить заказ?</p>
             <select name="reason" class="form-select" required>
-              <option value="style">Не устраивает стиль исполнения</option>
-              <option value="tz">Не соблюдение ТЗ</option>
+              <option value="style">Не устраивает стиль</option>
+              <option value="tz">Не соблюдено ТЗ</option>
               <option value="other">Другое</option>
             </select>
+            <div id="otherReasonField" style="display: none;">
+              <label>Уточнение:</label>
+              <textarea name="other_reason" class="form-control" rows="3"></textarea>
+            </div>
           </div>
-          <div class="mb-3" id="otherReasonField" style="display: none;">
-            <label class="form-label">Уточнение</label>
-            <textarea name="other_reason" class="form-control" rows="2"></textarea>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="submit" class="btn btn-danger">Подтвердить</button>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-danger">Подтвердить отмену</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
-  </div>
 </div>
 
-<!-- Стили для подсветки текущего статуса -->
+ <!-- Модальное окно для просмотра изображений -->
+  <div class="modal fade" id="viewImageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-body text-center">
+          <img id="modalImage" src="" class="img-fluid" alt="Работа художника">
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Стили -->
 <style>
   .active-status {
-    background-color: #0d6efd; /* Цвет фона */
-    color: white; /* Цвет текста */
-    font-weight: bold; /* Жирный текст */
+    background-color: #0d6efd;
+    color: white;
+    font-weight: 500;
+  }
+
+  .card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .list-group-item {
+    border: none;
+    padding: 0.75rem 1rem;
+  }
+
+  .modal-content {
+    border-radius: 12px;
+  }
+  /* Стили для кнопок */
+  .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .btn-danger:hover {
+    background-color: #bb2d3b;
+  }
+
+  .btn-success {
+    background-color: #198754;
+    border-color: #198754;
+  }
+
+  .btn-success:hover {
+    background-color: #157347;
+  }
+
+  .btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .btn-warning:hover {
+    background-color: #cc9e00;
+  }
+
+  .btn.w-100 {
+    width: 100%;
   }
 </style>
 <!-- Скрипты для обработки модальных окон -->
@@ -319,5 +460,60 @@
     const otherField = document.getElementById('otherReasonField');
     otherField.style.display = this.value === 'other' ? 'block' : 'none';
   });
+</script>
+<script>
+document.querySelector('select[name="reason"]').addEventListener('change', function() {
+    const otherField = document.getElementById('otherReasonField');
+    otherField.style.display = this.value === 'other' ? 'block' : 'none';
+});
+</script>
+<script>
+  // Обработка временной линии
+  const timeline = [
+    {% for message in messages %}
+      { type: 'message', sender: '{{ message.sender.username }}', text: '{{ message.text }}', images: {{ message.images.count }}, created_at: '{{ message.created_at }}' },
+    {% endfor %}
+    {% for revision in order.revision_requests.all %}
+      { type: 'revision', customer: '{{ revision.customer.username }}', comment: '{{ revision.comment }}', created_at: '{{ revision.created_at }}' },
+    {% endfor %}
+  ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  document.getElementById('chat-timeline').innerHTML = timeline.map(item => {
+    if (item.type === 'message') {
+      return `
+        <div class="mb-3">
+          <strong>${item.sender}:</strong>
+          <p>${item.text}</p>
+          ${item.images > 0 ? '<div class="d-flex gap-2"><img src="/path/to/image.jpg" class="img-thumbnail"></div>' : ''}
+        </div>
+      `;
+    } else {
+      return `
+        <div class="alert alert-warning mb-3">
+          <strong>Правки от ${item.customer}:</strong>
+          <p>${item.comment}</p>
+          <small>${new Date(item.created_at).toLocaleString()}</small>
+        </div>
+      `;
+    }
+  }).join('');
+</script>
+<!-- JS для модального просмотра изображений -->
+<script>
+  document.querySelectorAll('a[data-image]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const imageUrl = this.getAttribute('data-image');
+      document.getElementById('modalImage').src = imageUrl;
+    });
+  });
+</script>
+<script>
+document.querySelectorAll('.price').forEach(el => {
+    const value = parseInt(el.textContent);
+    if (!isNaN(value)) {
+        el.textContent = value.toLocaleString('ru-RU').replace(/\u202F/g, ' ');
+    }
+});
 </script>
 {% endblock %}

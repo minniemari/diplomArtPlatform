@@ -178,7 +178,6 @@
       <div class="modal-body">
         <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data">
           {% csrf_token %}
-
           <!-- Блок для отображения ошибок -->
           {% if form.errors %}
             <div class="alert alert-danger">

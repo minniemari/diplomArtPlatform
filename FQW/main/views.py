@@ -506,8 +506,10 @@ def order_detail_view(request, pk):
 
     # Проверяем, существует ли связанный заказ
     order = Orders.objects.filter(response=response).first()
-    messages = Message.objects.filter(chat__order=order).order_by('created_at') if order else []
-    revisions = RevisionRequest.objects.filter(order=order).order_by('created_at') if order else []
+    messages = Message.objects.filter(chat__order=order).order_by('created_at') if order else Message.objects.none()
+    revisions = RevisionRequest.objects.filter(order=order).order_by('created_at') if order else RevisionRequest.objects.none()
+    dispute = order.disputechat_set.filter(status='pending').first()
+    delivers = order.delivers.all() if order else []
 
     # Объединяем сообщения и правки в один временной ряд
     timeline = sorted(
@@ -535,8 +537,11 @@ def order_detail_view(request, pk):
     # Обработка POST-запросов
     if request.method == 'POST':
         if 'accept_order' in request.POST and not order:
-            if request.user == response.commission.user or request.user == response.birzha.user:
-                # Используйте get_or_create
+            # Проверяем тип отклика и наличие соответствующего объекта
+            is_commission_owner = response.commission and request.user == response.commission.user
+            is_birzha_owner = response.birzha and request.user == response.birzha.user
+
+            if is_commission_owner or is_birzha_owner:
                 order, created = Orders.objects.get_or_create(
                     response=response,
                     defaults={
@@ -548,6 +553,10 @@ def order_detail_view(request, pk):
                         'status': 'discussion'
                     }
                 )
+                    # Проверка успешного создания
+                    # if not created:
+                    #     order.status = 'discussion'
+                    #     order.save()
                 return redirect('order_detail', pk=response.pk)
         # Для заказчика: принятие заказа
         elif 'accept_order_customer' in request.POST:
@@ -562,9 +571,11 @@ def order_detail_view(request, pk):
     return render(request, 'order_detail.html', {
         'response': response,
         'order': order,
+        'dispute': dispute,
         'messages': messages,
         'selected_option': selected_option,
         'additional_options': additional_options,
+        'delivers': delivers,
     })
 
 @login_required
@@ -572,7 +583,7 @@ def send_message(request, order_id):
     order = get_object_or_404(Orders, id=order_id)
 
     if request.user not in [order.customer, order.artist]:
-        return redirect('order_detail', response_id=order.response.id)
+        return redirect('order_detail', pk=order.response.id)
 
     chat, created = Chat.objects.get_or_create(order=order)
     if created:
@@ -586,7 +597,7 @@ def send_message(request, order_id):
                 sender=request.user,
                 text=text
             )
-    return redirect('order_detail', response_id=order.response.id)
+    return redirect('order_detail', pk=order.response.id)
 
 login_required
 def order_actions(request, pk):
@@ -601,35 +612,45 @@ def order_actions(request, pk):
             order.save()
         elif action == 'submit_review' and order.status == 'in_work':
             return redirect('submit_delivery', pk=pk)
-        # Добавлены остальные действия...
+
 
 
 @login_required
 def submit_delivery(request, pk):
     order = get_object_or_404(Orders, pk=pk, artist=request.user)
-    chat, created = Chat.objects.get_or_create(order=order)  # Создаем чат, если не существует
+    chat, created = Chat.objects.get_or_create(order=order)
 
     if request.method == 'POST':
-        files = request.FILES.getlist('images')
+        images = request.FILES.getlist('images')  # Получаем список изображений
+        files = request.FILES.getlist('files')   # Получаем список файлов
         comment = request.POST.get('comment')
 
-        # Создаем сообщение с изображениями
-        message = Message.objects.create(
-            chat=chat,  # Теперь это экземпляр Chat
-            sender=request.user,
-            text=comment
+        # Создаем запись в Delivers
+        deliver = Delivers.objects.create(
+            order=order,
+            artist=request.user,
+            comment=comment
         )
 
-        # Сохраняем изображения
+        # Добавляем изображения
+        for image_file in images:
+            image = ImageStorage.objects.create(image=image_file)
+            deliver.images.add(image)
+
+        # Добавляем файлы
         for file in files:
-            image = ImageStorage.objects.create(image=file)
-            message.images.add(image)
+            stored_file = File.objects.create(
+                user=request.user,
+                file=file,
+                file_type='document' if file.name.endswith(('.psd', '.ai', '.zip')) else 'other'
+            )
+            deliver.files.add(stored_file)
 
         # Обновляем статус заказа
         order.status = 'on_review'
         order.save()
 
-        return redirect('order_detail', pk=pk)
+        return redirect('order_detail', pk=order.response.id)
 
     return render(request, 'submit_delivery.html', {'order': order})
 
@@ -672,34 +693,32 @@ def dispute_chat(request, pk):
 
 @login_required
 def cancel_order(request, pk):
-    order = get_object_or_404(Orders, pk=pk)
+    order = get_object_or_404(Orders, pk=pk, customer=request.user)
+
+    if not order.can_cancel():
+        messages.error(request, "Вы уже отправили максимальное количество заявок на отмену.")
+        return redirect('order_detail', pk=order.response.id)
+
     if request.method == 'POST':
         form = CancelOrderForm(request.POST)
         if form.is_valid():
             reason = form.cleaned_data['reason']
-            other_reason = form.cleaned_data['other_reason']
+            other_reason = form.cleaned_data.get('other_reason', '')
 
-            # Создаем запись об отмене
+            # Создание заявки на отмену
             OrderCancellation.objects.create(
                 order=order,
                 cancelled_by=request.user,
-                reason=other_reason if reason == 'other' else reason
+                reason=reason,
+                other_reason=other_reason
             )
 
-            # Обновляем статус заказа
-            order.status = 'cancelled'
-            order.save()
-
-            # Уведомляем участников
-            participants = [order.artist, order.customer]
-            message = f"Заказ #{order.id} отменен: {reason}"
-            if reason == 'other':
-                message += f" ({other_reason})"
-
-            for user in participants:
+            # Уведомление модератора
+            moderator = User.objects.filter(is_staff=True).first()
+            if moderator:
                 Notification.objects.create(
-                    user=user,
-                    message=message
+                    user=moderator,
+                    message=f"Новая заявка на отмену заказа #{order.id}"
                 )
 
             return redirect('order_detail', pk=order.response.id)
@@ -796,3 +815,71 @@ def edit_order(request, pk):
     else:
         form = UserResponseForm(instance=response)
     return render(request, 'edit_order.html', {'form': form})
+
+
+@login_required
+def handle_revision(request, pk, action):
+    revision = get_object_or_404(RevisionRequest, pk=pk)
+    order = revision.order
+
+    if request.user != order.artist:
+        return HttpResponseForbidden("Вы не можете выполнять это действие")
+
+    if action == 'accept':
+        order.status = 'in_work'
+        order.save()
+        Notification.objects.create(
+            user=order.customer,
+            message=f"Художник принял правки к заказу #{order.id}"
+        )
+        return redirect('order_detail', pk=revision.order.response.id)
+
+    elif action == 'dispute':
+        # Проверяем, есть ли уже активный спор
+        if not order.disputechat_set.filter(status='pending').exists():
+            moderator = User.objects.filter(is_superuser=True).first()
+            if not moderator:
+                messages.error(request, "Нет доступного модератора.")
+                return redirect('order_detail', pk=order.response.id)
+
+            # Создание спора
+            dispute = DisputeChat.objects.create(
+                order=order,
+                moderator=moderator,
+                reason=f"Спор по правкам к заказу #{order.id}",
+                status='pending'
+            )
+            dispute.participants.set([order.artist, order.customer])
+
+        # Обновление статуса заказа
+        order.status = 'discussion'
+        order.save()
+
+        return redirect('dispute_chat', pk=dispute.id)
+
+
+@login_required
+def resolve_dispute(request, pk, decision):
+    dispute = get_object_or_404(DisputeChat, pk=pk)
+
+    # Проверка, что пользователь — модератор
+    if request.user != dispute.moderator:
+        return HttpResponseForbidden("Вы не модератор этого спора")
+
+    # Установите решение и статус
+    if decision in ['accept', 'reject']:
+        dispute.decision = decision
+        dispute.status = 'resolved'
+        dispute.save()
+
+        # Уведомления участникам
+        Notification.objects.create(
+            user=dispute.order.artist,
+            message=f"Модератор решил спор по заказу #{dispute.order.id}: {decision}"
+        )
+        Notification.objects.create(
+            user=dispute.order.customer,
+            message=f"Модератор решил спор по заказу #{dispute.order.id}: {decision}"
+        )
+
+    return redirect('dispute_chat', pk=pk)

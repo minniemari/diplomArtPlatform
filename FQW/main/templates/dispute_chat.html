@@ -1,33 +1,39 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Чат спорного заказа{% endblock %}
-
 {% block content %}
-<h2>Спорный чат для заказа #{{ order.id }}</h2>
-<div class="row">
-    <div class="col-md-6">
-        <p><strong>Заказ:</strong> {{ order }}</p>
-        <p><strong>Модератор:</strong> {{ order.moderator.username }}</p>
-        <p><strong>Статус:</strong> {{ order.status }}</p>
+<h2>Спор по правкам</h2>
+
+<div class="chat-container">
+  {% for message in messages %}
+    <div class="message {% if message.sender == request.user %}self{% endif %}">
+      <strong>{{ message.sender.username }}</strong>
+      <p>{{ message.text }}</p>
+      <small>{{ message.created_at }}</small>
     </div>
-    <div class="col-md-6">
-        <h3>Чат</h3>
-        <div class="chat-messages">
-            {% for message in messages %}
-            <div class="message {% if message.sender == request.user %}self{% endif %}">
-                <p>{{ message.text }}</p>
-                <small>{{ message.created_at }}</small>
-            </div>
-            {% empty %}
-            <p>Нет сообщений.</p>
-            {% endfor %}
-        </div>
-        <form method="post">
-            {% csrf_token %}
-            <textarea name="text" class="form-control" placeholder="Введите сообщение"></textarea>
-            <button type="submit" class="btn btn-primary mt-2">Отправить</button>
-        </form>
-    </div>
+  {% empty %}
+    <p>Сообщений пока нет</p>
+  {% endfor %}
 </div>
+
+<!-- Форма отправки сообщения -->
+{% if request.user in dispute.participants.all %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <textarea name="message" class="form-control" rows="2"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Отправить</button>
+  </form>
+{% endif %}
+
+<!-- Кнопки для модератора -->
+{% if user == dispute.moderator %}
+  <div class="mt-4 d-flex gap-2">
+    <a href="{% url 'resolve_dispute' dispute.id 'accept' %}" class="btn btn-success">
+      Принять сторону заказчика
+    </a>
+    <a href="{% url 'resolve_dispute' dispute.id 'reject' %}" class="btn btn-danger">
+      Принять сторону художника
+    </a>
+  </div>
+{% endif %}
 {% endblock %}

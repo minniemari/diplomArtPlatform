@@ -92,7 +92,7 @@ class Orders(models.Model):
     def update_status(self, new_status):
         """Обновляет статус заказа и фиксирует изменение"""
         if new_status in dict(self.STATUS_CHOICES):
-            OrderStatus.objects.create(order=self, status=new_status)
+            # OrderStatus.objects.create(order=self, status=new_status)
             self.status = new_status
             self.save()
         else:
@@ -123,6 +123,13 @@ class Orders(models.Model):
     def accept_order(self):
         self.status = 'accepted'
         self.save()
+
+    def has_active_dispute(self):
+        return self.disputechat_set.filter(status='pending').exists()
+
+    def can_cancel(self):
+        # Проверяем, есть ли уже 3 заявки на отмену
+        return self.ordercancellation_set.count() < 3
 
     class Meta:
         verbose_name = 'Заказ'
@@ -180,13 +187,29 @@ class Birzha(models.Model):
 
 # Модель отмены заказа
 class OrderCancellation(models.Model):
+    ORDER_CANCELLATION_REASONS = [
+        ('style', 'Не устраивает стиль'),
+        ('tz', 'Не соблюдено ТЗ'),
+        ('other', 'Другое'),
+    ]
     order = models.ForeignKey(Orders, on_delete=models.CASCADE)
     cancelled_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    reason = models.TextField()
+    reason = models.CharField(max_length=255, choices=ORDER_CANCELLATION_REASONS)
+    other_reason = models.TextField(blank=True, null=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'На рассмотрении'), ('accepted', 'Принято'), ('rejected', 'Отказано')],
+        default='pending'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
         return f"Отмена заказа #{self.order.id}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.status == 'accepted':
+            self.order.status = 'cancelled'
+            self.order.save()
 
 
 # Модель дополнительных опций
@@ -293,7 +316,7 @@ class Message(models.Model):
 # Модель спорного чата
 class DisputeChat(models.Model):
     order = models.ForeignKey(Orders, on_delete=models.CASCADE)
-    moderator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='moderated_disputes')
+    moderator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='moderated_disputes',limit_choices_to={'is_superuser': True})
     participants = models.ManyToManyField(User, related_name='dispute_chats')
     created_at = models.DateTimeField(auto_now_add=True)
     reason = models.TextField()
@@ -305,6 +328,15 @@ class DisputeChat(models.Model):
             ('rejected', 'Отказано'),
         ],
         default='pending'
+    )
+    decision = models.CharField(
+        max_length=10,
+        choices=[
+            ('accept', 'Принять сторону заказчика'),
+            ('reject', 'Принять сторону художника'),
+        ],
+        blank=True,
+        null=True
     )
 
     def __str__(self):

@@ -27,17 +27,20 @@ urlpatterns = [
     path('edit-profile/', edit_profile, name='edit_profile'),
     path('my-orders/', views.my_orders, name='my_orders'),
     path('order/<int:pk>/', views.order_detail_view, name='order_detail'),
-    path('send-message/<int:order_id>/', views.send_message, name='send_message'),
-    path('profile/<str:username>/', profile_detail, name='profile_detail'),
     path('order/<int:pk>/action/', views.order_actions, name='order_actions'),
     path('order/<int:pk>/submit-delivery/', views.submit_delivery, name='submit_delivery'),
     path('order/<int:pk>/leave-review/', views.leave_review, name='leave_review'),
+    path('send-message/<int:order_id>/', views.send_message, name='send_message'),
     path('notifications/', views.NotificationListView.as_view(), name='notifications_list'),
-    path('order/<int:pk>/request-revisions/', views.request_revisions, name='request_revisions'),
     path('order/<int:pk>/start-work/', views.start_work, name='start_work'),
     path('order/<int:pk>/edit-order/', views.edit_order, name='edit_order'),
     path('order/<int:pk>/cancel/', views.cancel_order, name='cancel_order'),
     path('leave_review/<int:pk>/', views.leave_review, name='leave_review'),
+    path('order/<int:pk>/request-revisions/', views.request_revisions, name='request_revisions'),
+    path('profile/<str:username>/', profile_detail, name='profile_detail'),
+    path('handle_revision/<int:pk>/<str:action>/', handle_revision, name='handle_revision'),
+    path('dispute/<int:pk>/<str:decision>/', resolve_dispute, name='resolve_dispute'),
+    path('dispute/<int:pk>/', views.dispute_chat, name='dispute_chat')
 ]
 
 if settings.DEBUG:
