@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/OrderDetails.css' %}">
+{% endblock %}
 {% block content %}
 <div class="container mt-5">
   <h2>Детали заказа</h2>
@@ -500,13 +503,13 @@ document.querySelector('select[name="reason"]').addEventListener('change', funct
 </script>
 <!-- JS для модального просмотра изображений -->
 <script>
-  document.querySelectorAll('a[data-image]').forEach(link => {
+document.querySelectorAll('a[data-image]').forEach(link => {
     link.addEventListener('click', function(e) {
-      e.preventDefault();
-      const imageUrl = this.getAttribute('data-image');
-      document.getElementById('modalImage').src = imageUrl;
+        e.preventDefault();
+        const imageUrl = this.getAttribute('data-image');
+        document.getElementById('modalImage').src = imageUrl;
     });
-  });
+});
 </script>
 <script>
 document.querySelectorAll('.price').forEach(el => {

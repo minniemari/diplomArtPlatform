@@ -10,7 +10,7 @@
   <!-- Шапка профиля -->
   <div class="row align-items-center mb-4">
     <div class="col-md-3">
-      <img src="{{ profile.user.profile.image.url }}" alt="Аватар" class="img-fluid rounded-circle mb-2">
+      <img src="{{ profile.user.profile.image.url }}" alt="Аватар" class="rounded-circle profile-avatar mb-2">
       <h5>{{ profile.user.profile.user.username }}</h5>
       <p>{{ profile.specialization }}</p>
     </div>
@@ -63,7 +63,7 @@
                 <img src="{{ commission.image.url }}" class="card-img-top" alt="{{ commission.title }}">
                 <div class="card-body">
                   <h6 class="card-title">{{ commission.title }}</h6>
-                  <p class="card-text">От {{ commission.min_price }} ₽</p>
+                  <p class="card-text">От <span class="formatted-price"> {{ commission.min_price }}</span>₽</p>
                 </div>
               </div>
             </a>
@@ -97,7 +97,7 @@
       {% if request.user == profile.user %}
         <div class="col">
           <div class="card h-100 text-center">
-            <button type="button" class="btn btn-light w-100" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
+            <button type="button" class="btn btn-add-work w-100" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
               Добавить работу
             </button>
           </div>
@@ -127,6 +127,18 @@
         </div>
       </div>
     </div>
+  <h5>Отзывы</h5>
+    <ul>
+      {% for review in profile.user.reviews_received.all %}
+        <li>
+          <img src="{{ review.customer.profile.image.url }}" alt="">
+          <p>{{ review.comment }}</p>
+          <div>Оценка: {{ review.rating }}/5</div>
+        </li>
+      {% empty %}
+        <p>Нет отзывов</p>
+      {% endfor %}
+    </ul>
 
   <!-- Модальное окно для добавления работы -->
     <div class="modal fade" id="addPortfolioModal" tabindex="-1" aria-labelledby="addPortfolioModalLabel" aria-hidden="true">
@@ -150,25 +162,13 @@
               </div>
               <button type="submit" class="btn btn-primary">Добавить работу</button>
             </form>
-            <h5>Отзывы</h5>
-            <ul>
-              {% for review in profile.user.reviews_received.all %}
-                <li>
-                  <img src="{{ review.customer.profile.image.url }}" alt="">
-                  <p>{{ review.comment }}</p>
-                  <div>Оценка: {{ review.rating }}/5</div>
-                </li>
-              {% empty %}
-                <p>Нет отзывов</p>
-              {% endfor %}
-            </ul>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Модальное окно для редактирования профиля -->
-    <div class="modal fade" id="editProfileModal" tabindex="-1">
+  <!-- Модальное окно для редактирования профиля -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -209,13 +209,12 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Навыки</label>
-            <select name="skills" class="form-select" multiple>
-              {% for skill in all_skills %}
-                <option value="{{ skill.id }}" {% if skill in profile.skills.all %}selected{% endif %}>
-                  {{ skill.name }}
-                </option>
-              {% endfor %}
-            </select>
+             {{ form.skills }}
+              {% if form.skills.errors %}
+                <div class="alert alert-danger mt-2">
+                  {{ form.skills.errors }}
+                </div>
+              {% endif %}
           </div>
           <button type="submit" class="btn btn-primary">Сохранить</button>
         </form>
@@ -223,7 +222,6 @@
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -288,4 +286,28 @@
     .catch(error => console.error('Error:', error));
   }
 </script>
+<script>
+// Анимация появления карточек при загрузке
+document.addEventListener("DOMContentLoaded", function () {
+  const elements = document.querySelectorAll(".fade-in");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("loaded");
+      }
+    });
+  }, { threshold: 0.1 });
+
+  elements.forEach(el => observer.observe(el));
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Форматирование существующих цен на странице
+  document.querySelectorAll('.formatted-price').forEach(element => {
+    element.textContent = element.textContent.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
+  });
+});
+</script>
+
 {% endblock %}

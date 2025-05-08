@@ -1,25 +1,134 @@
-.modal-body textarea {
-    resize: vertical;
+/* === Основные стили === */
+body {
+    background-color: #10111F;
+    color: #CDC7B7;
 }
 
-.form-check-input:checked ~ .form-check-label strong {
-    color: #0d6efd; /* Цвет текста при выборе опции */
+.container {
+    max-width: 800px;
 }
-/* Стили для формы */
+
 .card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    background-color: #5C556C;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-body {
+    color: #CDC7B7;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* === Форма технического задания === */
+.form-label {
+    color: #CDC7B7;
+    font-weight: 600;
+}
+
+small.text-muted {
+    color: #EDE9DC !important;
+}
+
+textarea{
+background-color: #10111F;
+  color: #CDC7B7;
+  border: 1px solid #748BBB;
+  border-radius: 0.5rem;
+  padding: 10px;
+  font-size: 1rem;
+  margin-top: 10px;
+  width: 100%;
+}
+
+textarea.form-control {
+    background-color: #10111F;
+    color: #CDC7B7;
+    border: 1px solid #748BBB;
+    resize: vertical;
+    padding: 10px;
+    border-radius: 0.5rem;
+    transition: border-color 0.3s ease;
+}
+
+textarea.form-control:focus {
+    border-color: #82779F;
+    box-shadow: 0 0 0 0.25rem rgba(130, 119, 159, 0.3);
+}
+
+/* === Чекбоксы (дополнительные опции) === */
+.form-check-input {
+    accent-color: #748BBB; /* Цвет чекбокса */
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+}
+
+.form-check-label {
+    display: block;
+    cursor: pointer;
+    color: #CDC7B7;
+    padding-left: 10px;
+}
+
+.form-check-label strong {
+    color: #CDC7B7;
+    transition: color 0.3s ease;
 }
 
 .form-check-input:checked ~ .form-check-label strong {
-    color: #0d6efd; /* Цвет текста при выборе опции */
+    color: #748BBB; /* Акцентный цвет при выборе */
 }
 
+/* === Кнопка "Прикрепить файлы" === */
 #attachFilesButton {
-    cursor: pointer;
+    background-color: #748BBB;
+    color: #10111F;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
 }
-textarea {
-    border-radius: 8px;
-    padding: 10px;
-    width: calc(100% - 20px);
+
+#attachFilesButton:hover {
+    background-color: #82779F;
+    color: white;
+}
+
+#attachedFiles + small {
+    color: #EDE9DC;
+}
+
+/* === Итоговая стоимость === */
+#totalPrice,
+#totalDeadline {
+    font-size: 1.5rem;
+    color: #CDC7B7;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* === Кнопка "Заказать" === */
+.btn-primary {
+    background-color: #748BBB;
+    border: none;
+    color: #10111F;
+    border-radius: 0.5rem;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #82779F;
+    transform: scale(1.02);
 }

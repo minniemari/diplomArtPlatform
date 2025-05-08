@@ -8,6 +8,7 @@
 {% block title %} Каталог биржи {% endblock %}
 
 {% block content %}
+<div class="bazaar-catalog">
     <div class="container mt-5">
         <h2 class="text-center mb-4">Каталог биржи</h2>
 
@@ -26,10 +27,7 @@
             </div>
             <div class="col-md-3">
                 <label for="priceFilter" class="form-label">Максимальная стоимость</label>
-                <input type="number" id="priceFilter" name="price" class="form-control" placeholder="Максимальная цена" value="{{ request.GET.price }}">
-            </div>
-            <div class="col-md-3 align-self-end">
-                <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
+                <input type="number" id="priceFilter" name="price" class="form-control price-input" placeholder="Максимальная цена" value="{{ request.GET.price }}">
             </div>
             <div class="col-md-3 align-self-end">
                 <label for="sortFilter" class="form-label">Отсортировать по:</label>
@@ -37,6 +35,9 @@
                     <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Цене (по возрастанию)</option>
                     <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Цене (по убыванию)</option>
                 </select>
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
             </div>
         </form>
 
@@ -48,7 +49,7 @@
                         <div class="card-body">
                             <!-- Бюджет и готовность к повышению цены -->
                             <div class="budget-info text-end">
-                                <strong class="budget">Бюджет до {{ bid.price }} ₽</strong>
+                                <strong class="formatted-price">Бюджет до {{ bid.price }} ₽</strong>
                                 {% if bid.increasedPrice %}
                                     <small class="text-muted d-block">Готов рассмотреть стоимость выше</small>
                                 {% endif %}
@@ -95,4 +96,15 @@
             </ul>
         </nav>
     </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Форматирование существующих цен на странице
+  document.querySelectorAll('.formatted-price').forEach(element => {
+    element.textContent = element.textContent.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
+  });
+});
+</script>
 {% endblock %}

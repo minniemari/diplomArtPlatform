@@ -84,7 +84,8 @@
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" id="package-switch" name="package-switch">
                         <label class="form-check-label" for="package-switch">
-                            1 пакет <span class="badge bg-secondary">3 пакета</span>
+                            <span class="badge badge-package basic">1 пакет</span>
+                            <span class="badge badge-package premium">3 пакета</span>
                         </label>
                     </div>
 
@@ -504,7 +505,30 @@
         updateFormIndices();
     });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const switchInput = document.getElementById('package-switch');
+          const basicBadge = document.querySelector('.badge-package.basic');
+          const premiumBadge = document.querySelector('.badge-package.premium');
 
+          // Установка начального состояния
+          if (!switchInput.checked) {
+            basicBadge.classList.add('active');
+          } else {
+            premiumBadge.classList.add('active');
+          }
 
+          // Обработка изменения состояния свитча
+          switchInput.addEventListener('change', function () {
+            if (this.checked) {
+              basicBadge.classList.remove('active');
+              premiumBadge.classList.add('active');
+            } else {
+              premiumBadge.classList.remove('active');
+              basicBadge.classList.add('active');
+            }
+          });
+        });
+    </script>
 </body>
 </html>

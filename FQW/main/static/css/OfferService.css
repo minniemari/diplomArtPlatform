@@ -1,29 +1,112 @@
-/* Стили для карточки */
+/* === Стили для карточки === */
 .card {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background-color: #5C556C; /* Темно-фиолетовый фон */
+    border: 1px solid #748BBB; /* Голубая граница */
+    border-radius: 1rem;
+    padding: 1.25rem;
+    color: #CDC7B7; /* Бежевый текст */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* === Заголовок карточки === */
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #CDC7B7;
+}
+
+/* === Текст внутри карточки === */
+.card-body {
+    color: #EDE9DC;
+}
+
+/* === Формы в карточке === */
+.card-body textarea,
+.card-body input[type="text"],
+.card-body input[type="number"] {
+    background-color: #10111F;
+    color: #CDC7B7;
+    border: 1px solid #748BBB;
     border-radius: 0.5rem;
-    padding: 1rem;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    resize: vertical;
+}
+
+.card-body textarea:focus,
+.card-body input[type="text"]:focus,
+.card-body input[type="number"]:focus {
+    background-color: #10111F;
+    color: #CDC7B7;
+    border-color: #82779F;
+    box-shadow: 0 0 0 0.25rem rgba(130, 119, 159, 0.3);
 }
 
 .card-header {
-    background-color: #e9ecef;
-    border-bottom: 1px solid #dee2e6;
+    background-color: rgba(116, 139, 187, 0.75); /* Голубой заголовок */
+    color: #10111F;
+    font-weight: 600;
+    border-bottom: none;
+    padding: 1rem 1.25rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
 }
 
-.card-body textarea {
-    resize: vertical; /* Разрешаем изменять высоту текстового поля */
-}
-
+/* === Подвал карточки === */
 .card-footer {
     background-color: transparent;
-}
-.btn-primary a {
-    pointer-events: auto; /* Убедитесь, что клик разрешен */
+    border-top: none;
+    padding-top: 0;
 }
 
+/* === Кнопки внутри карточки === */
+.btn-primary {
+    background-color: #748BBB;
+    border-color: #748BBB;
+    color: #10111F;
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #82779F;
+    color: #fff;
+    transform: scale(1.02);
+}
+
+.btn-primary a {
+    color: inherit;
+    text-decoration: none;
+    pointer-events: auto;
+}
+
+/* === Текстовое поле === */
 textarea {
     border-radius: 8px;
     padding: 10px;
     width: calc(100% - 20px);
+    min-height: 100px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+/* Стили для текста "Готов рассмотреть стоимость выше" */
+.text-muted {
+  display: block; /* Размещает текст под бюджетом */
+  font-size: 0.85rem; /* Уменьшенный размер шрифта */
+  color: #bbd1ff !important; /* Голубой акцент */
+  margin-top: 0.25rem; /* Отступ сверху */
 }

@@ -4,26 +4,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My Art Platform{% endblock %}</title>
+    <title>{% block title %}InkSpire{% endblock %}</title>
     <!-- Подключение Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/reviews.css' %}" rel="stylesheet">
+    <link href="{% static 'css/notifications.css' %}" rel="stylesheet">
     <!-- Подключение собственного стиля -->
     {% block extra_css %}
-        <link href="{% static 'css/reviews.css' %}" rel="stylesheet">
-        <link href="{% static 'css/notifications.css' %}" rel="stylesheet">
     {% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">InkSpire</a>
+            <a class="navbar-brand fw-bold text-light" href="{% url 'home' %}" style="font-family: 'Manrope', sans-serif;">
+                Ink<span style="color:#10111F;">Spire</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    {% if user.is_authenticated %}
+                        <!--Уведомления-->
+                        <li class="nav-item dropdown me-2">
+                            <a class="nav-link" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-bell"></i>
+                                {% if request.user.is_authenticated %}
+                                    <span class="badge bg-danger">{{ request.user.notifications.unread.count }}</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                                {% if request.user.is_authenticated %}
+                                    {% for notification in request.user.notifications.all|slice:":5" %}
+                                        <li>
+                                            <a class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %}"
+                                               href="{{ notification.get_absolute_url }}">
+                                                {{ notification.message }}
+                                                <small class="d-block text-muted">{{ notification.created_at|timesince }} назад</small>
+                                            </a>
+                                        </li>
+                                    {% empty %}
+                                        <li><a class="dropdown-item disabled">Нет уведомлений</a></li>
+                                    {% endfor %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-center" href="{% url 'notifications_list' %}">Все уведомления</a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item disabled">Войдите для просмотра</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    {% endif %}
                     <!-- Кнопка "Каталог коммишек" -->
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-light" href="{% url 'commissions_catalog' %}">
@@ -44,34 +78,7 @@
                             <i class="bi bi-person-circle"></i> Профиль
                         </a>
                     </li>
-                    <!--Уведомления-->
-                    <li class="nav-item dropdown me-2">
-                        <a class="nav-link" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-bell"></i>
-                            {% if request.user.is_authenticated %}
-                                <span class="badge bg-danger">{{ request.user.notifications.unread.count }}</span>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
-                            {% if request.user.is_authenticated %}
-                                {% for notification in request.user.notifications.all|slice:":5" %}
-                                    <li>
-                                        <a class="dropdown-item {% if not notification.is_read %}fw-bold{% endif %}"
-                                           href="{{ notification.get_absolute_url }}">
-                                            {{ notification.message }}
-                                            <small class="d-block text-muted">{{ notification.created_at|timesince }} назад</small>
-                                        </a>
-                                    </li>
-                                {% empty %}
-                                    <li><a class="dropdown-item disabled">Нет уведомлений</a></li>
-                                {% endfor %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-center" href="{% url 'notifications_list' %}">Все уведомления</a></li>
-                            {% else %}
-                                <li><a class="dropdown-item disabled">Войдите для просмотра</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
+
                     <!-- Мои заказы -->
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-light" href="{% url 'my_orders' %}">

@@ -1,103 +1,271 @@
-.image-container {
+/* === Основные стили === */
+body {
+    background-color: #10111F;
+    color: #CDC7B7;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.card {
+    background-color: #5C556C;
+    border-radius: 1rem;
     overflow: hidden;
-    border-radius: 0.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.placeholder-image {
-    background-color: #f8f9fa;
-    padding: 50px 0;
-    text-align: center;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-.nav-pills .nav-link.active {
-    background-color: #f8f9fa;
-    color: #000;
+.card-title {
+    font-size: 1.5rem;
+    color: #CDC7B7;
 }
 
-.card-body button {
-    margin-bottom: 1rem;
+.card-text {
+    color: #EDE9DC;
 }
 
-.bi-star-fill {
-    font-size: 1rem;
-}
-/* Круглое изображение профиля */
-.profile-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.card-img-top {
+  height: 200px; /* Фиксированная высота */
+  object-fit: cover; /* Сохраняет пропорции */
+  object-position: center; /* Центрирует изображение */
+  border-bottom: 1px solid #444; /* Добавьте границу, если нужно */
 }
 
-/* Стили для панели с пакетами */
-.card-header-tabs .nav-link {
-    cursor: pointer;
+.nav-tabs .nav-link {
+    background-color: transparent;
+    color: #CDC7B7;
+    border: none;
+    border-bottom: 2px solid transparent;
     transition: all 0.3s ease;
 }
 
-.card-header-tabs .nav-link.active {
-    background-color: #f8f9fa;
-    color: #000;
-    font-weight: bold;
+.nav-tabs .nav-link.active {
+    background-color: transparent;
+    color: #748BBB;
+    border-bottom-color: #748BBB;
 }
 
-.card-body button {
-    margin-bottom: 1rem;
-}
-/* Стили для карусели */
-.carousel {
-    margin-bottom: 20px;
+.nav-tabs .nav-link:hover {
+    color: #748BBB;
 }
 
-.carousel-inner .carousel-item.active,
-.carousel-inner .carousel-item-next,
-.carousel-inner .carousel-item-prev {
-    display: block;
+.btn-primary {
+    background-color: #748BBB;
+    border-color: #748BBB;
+    color: #10111F;
+    transition: all 0.3s ease;
 }
 
-.carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left),
-.carousel-inner .active.carousel-item-left {
-    transform: translateX(0);
+.btn-primary:hover {
+    background-color: #82779F;
+    color: #fff;
 }
 
-.carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left),
-.carousel-inner .active.carousel-item-right {
-    transform: translateX(0);
+.btn-secondary {
+    background-color: #5C556C;
+    border-color: #5C556C;
+    color: #CDC7B7;
+    transition: all 0.3s ease;
 }
 
-.carousel-inner .carousel-item-next,
-.carousel-inner .active.carousel-item-left {
-    transform: translateX(100%);
+.btn-secondary:hover {
+    background-color: #748BBB;
+    color: #10111F;
 }
 
-.carousel-inner .carousel-item-prev,
-.carousel-inner .active.carousel-item-right {
-    transform: translateX(-100%);
-}
-
-/* styles.css */
 .btn-favorite {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #dc3545; /* Цвет сердца */
-  font-size: 1.2rem; /* Размер иконки */
-  transition: all 0.3s ease;
-}
-
-.btn-favorite:hover {
-  background-color: #f8d7da;
-  border-color: #dc3545;
+    background-color: transparent;
+    border: none;
+    color: #CDC7B7;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
 }
 
 .btn-favorite.active {
-  background-color: #dc3545;
-  color: #ffffff;
+    color: #FF4500; /* Красное сердце */
+}
+
+.avatar {
+    object-fit: cover;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.1);
+}
+
+/* === Анимация карусели === */
+.carousel {
+  position: relative;
+}
+
+.carousel-inner,
+.carousel-item {
+    height: 0;
+    padding-bottom: 75%; /* 4:3 = 100% / (4/3) = 75% */
+    overflow: hidden;
+}
+.carousel-item {
+ transition: transform 0.6s ease-in-out;
+ backface-visibility: hidden;
+}
+
+.carousel-inner img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-item-next {
+    transform: translateX(100%);
+}
+
+.carousel-item-prev {
+    transform: translateX(-100%);
+}
+
+.carousel-item.active {
+    transform: translateX(0);
+}
+
+/* === Карточка исполнителя === */
+.card.mt-4.p-3 {
+  background-color: #5C556C;
+  border-radius: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.mt-4.p-3:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* === Аватарка исполнителя === */
+.profile-avatar {
+  object-fit: cover; /* Сохраняет пропорции */
+  border: 2px solid #748BBB; /* Голубая рамка вокруг аватара */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 50%; /* Круглая форма */
+}
+
+/* === Эффект при наведении на аватарку === */
+.profile-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(116, 139, 187, 0.5);
+}
+
+/* === Текст профиля === */
+.card .mb-0 {
+  color: #CDC7B7;
+  font-weight: 600;
+}
+
+.card small {
+  color: #EDE9DC;
+}
+
+/* === Индикаторы карусели === */
+.carousel-indicators {
+  position: absolute;
+  bottom: -40px; /* Расположение снизу */
+  left: 50%; /* Центрирование по горизонтали */
+  transform: translateX(-50%); /* Корректировка центрирования */
+  display: flex; /* Используем Flexbox для выравнивания */
+  justify-content: center; /* Выравнивание элементов по центру */
+  margin-left: 0% !important;
+  gap: 10px; /* Небольшой отступ между индикаторами */
+}
+
+.carousel-indicators button {
+  background-color: rgba(255, 255, 255, 0.2);
+  width: 10px;
+  height: 10px;
+  border-radius: 50% !important;
+  margin: 0;
+  transition: background-color 0.3s ease;
+}
+
+.carousel-indicators button:hover {
+  background-color: rgba(255, 255, 255, 0.5); /* Плавное изменение цвета при наведении */
+}
+
+.carousel-indicators .active {
+  background-color: #748BBB;
+}
+
+/* === Карусель === */
+.carousel {
+  position: relative;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.carousel-control-prev {
+  left: 1rem; /* Смещаем на 1rem от левого края */
+}
+
+.carousel-control-next {
+  right: 1rem; /* Смещаем на 1rem от правого края */
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* === Модальное окно === */
+.modal-body {
+  padding: 0; /* Убираем внутренние отступы */
+  background-color: #040408;
+  justify-content: center;
+  align-items: center;
+}
+
+#imageCarousel .carousel-inner .carousel-item {
+  height: 100%; /* Высота слайда */
+}
+
+#imageCarousel .carousel-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Сохраняет пропорции изображения */
+}
+
+#imageCarousel .carousel-item {
+  transition: transform 0.6s ease-in-out;
+  backface-visibility: hidden;
+}
+
+#imageCarousel .carousel-item-next,
+#imageCarousel .carousel-item-prev {
+  transform: translateX(100%);
+}
+
+#imageCarousel .carousel-item.active {
+  transform: translateX(0);
 }

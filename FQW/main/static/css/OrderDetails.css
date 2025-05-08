@@ -1,0 +1,212 @@
+/* === Основной контейнер === */
+.order-detail-container {
+    background-color: #10111F;
+    color: #CDC7B7;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+}
+
+/* === Заголовки === */
+.order-detail-container h2,
+.order-detail-container h5 {
+    color: #CDC7B7;
+    font-weight: 600;
+}
+
+/* === Карточки === */
+.card {
+    background-color: #5C556C;
+    border-radius: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card-body {
+    color: #EDE9DC;
+}
+
+/* === Список статусов === */
+.list-group-item {
+    background-color: transparent;
+    color: #CDC7B7;
+    border: none;
+}
+
+.list-group-item.active-status {
+    background-color: #748BBB !important;
+    color: #10111F !important;
+    font-weight: 600;
+    border-radius: 0.5rem;
+}
+
+/* === Прикрепленные файлы === */
+.list-unstyled a {
+    color: #bbd1ff;
+    text-decoration: none;
+}
+.list-unstyled a:hover {
+    text-decoration: underline;
+}
+
+/* === Блоки с изображениями и файлами === */
+.d-flex.gap-2 img {
+    max-width: 150px;
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease;
+}
+.d-flex.gap-2 img:hover {
+    transform: scale(1.05);
+}
+
+/* === Модальные окна === */
+.modal-content {
+    background-color: #5C556C;
+    border-radius: 1rem;
+    color: #CDC7B7;
+}
+
+.modal-header,
+.modal-footer {
+    border-bottom: none;
+    border-top: none;
+}
+
+.modal-title {
+    color: #10111F;
+    font-weight: 600;
+}
+
+.form-select,
+.form-control {
+    background-color: #10111F;
+    color: #CDC7B7;
+    border: 1px solid #748BBB;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+.form-select:focus,
+.form-control:focus {
+    background-color: #10111F;
+    color: #CDC7B7;
+    border-color: #82779F;
+    box-shadow: 0 0 0 0.25rem rgba(130, 119, 159, 0.3);
+}
+
+/* === Кнопки === */
+.btn {
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #748BBB;
+    border-color: #748BBB;
+    color: #10111F;
+}
+.btn-primary:hover {
+    background-color: #82779F;
+    color: #fff;
+}
+
+.btn-secondary {
+    background-color: #82779F;
+    border-color: #82779F;
+}
+.btn-secondary:hover {
+    background-color: #748BBB;
+}
+
+.btn-success {
+    background-color: #748BBB;
+    border-color: #748BBB;
+}
+.btn-success:hover {
+    background-color: #82779F;
+}
+
+.btn-danger {
+    background-color: #CD5C5C;
+    border-color: #CD5C5C;
+}
+.btn-danger:hover {
+    background-color: #B22222;
+}
+
+.btn-warning {
+    background-color: #FFD700;
+    border-color: #FFD700;
+    color: #10111F;
+}
+.btn-warning:hover {
+    background-color: #FFC107;
+}
+
+/* === Чат === */
+.chat-box {
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #4A4358;
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+}
+
+.chat-box .mb-3 strong {
+    color: #748BBB;
+}
+
+.chat-box p {
+    margin-bottom: 0.25rem;
+}
+
+/* === Правки (revisions) === */
+.alert-warning {
+    background-color: #5C556C;
+    color: #EDE9DC;
+    border-left: 4px solid #FFD700;
+}
+
+/* === Изображение в модальном окне === */
+#modalImage {
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* === Форма отправки сообщения === */
+.input-group textarea {
+    background-color: #10111F;
+    color: #CDC7B7;
+    border: 1px solid #748BBB;
+    border-radius: 0.5rem;
+}
+.input-group button {
+    border-radius: 0.5rem;
+}
+
+/* === Аватарки пользователей === */
+.rounded-circle {
+    object-fit: cover;
+    border: 2px solid #748BBB;
+}
+
+/* === Таблицы и списки === */
+ul li {
+    margin-bottom: 0.5rem;
+}
+
+.mb-0{
+color: #b4d3ff;
+}
+
+.text-muted{
+color: #f3f9ff !important;
+}
+

@@ -23,7 +23,7 @@
                         <small>Тип: {{ bid.type.name }}</small>
                     </div>
                     <div>
-                        <strong>Бюджет до {{ bid.price }} ₽</strong>
+                        <strong>Бюджет до <span class="formatted-price">{{ bid.price }} ₽</span></strong>
                         {% if bid.increasedPrice %}
                             <small class="text-muted">(Готов рассмотреть стоимость выше)</small>
                         {% endif %}
@@ -68,4 +68,14 @@
             </div>
         </form>
     </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Форматирование существующих цен на странице
+  document.querySelectorAll('.formatted-price').forEach(element => {
+    element.textContent = element.textContent.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
+  });
+});
+</script>
 {% endblock %}

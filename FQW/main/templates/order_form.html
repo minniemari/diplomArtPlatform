@@ -21,7 +21,7 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title">Пакет "{{ selected_option.get_package_type_display }}"</h5>
-                        <p><strong>Стоимость:</strong> {{ selected_option.price }} ₽</p>
+                        <p><strong>Стоимость:</strong> <span class="formatted-price">{{ selected_option.price }} ₽</span></p>
                         <p><strong>Срок выполнения:</strong> {{ selected_option.deadline }} дней</p>
                         <p><strong>Описание:</strong> {{ selected_option.description }}</p>
                     </div>
@@ -59,7 +59,7 @@
 
                 <!-- Итоговая стоимость -->
                 <div class="mb-3">
-                    <strong id="totalPrice">{{ total_price }} ₽</strong>
+                    <strong id="totalPrice" class="formatted-price">{{ total_price }} ₽</strong>
                     <small>Итого (включая дополнительные опции)</small><br>
                     <strong id="totalDeadline">{{ total_deadline }} дней</strong>
                     <small>Срок выполнения</small>
@@ -77,5 +77,13 @@
         document.getElementById('attachFilesButton').addEventListener('click', function () {
             document.getElementById('attachedFiles').click();
         });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Форматирование существующих цен на странице
+      document.querySelectorAll('.formatted-price').forEach(element => {
+        element.textContent = element.textContent.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
+      });
+    });
     </script>
 {% endblock %}

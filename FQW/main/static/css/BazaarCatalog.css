@@ -1,54 +1,91 @@
-/* Правый верхний угол */
-.budget-info {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    text-align: right;
+.bazaar-catalog {
+  background-color: #10111F;
+  padding: 2rem;
 }
 
-.budget {
-    font-size: 1.2rem;
-    color: #007bff; /* Цвет бюджета */
+/* Фильтры */
+.bazaar-catalog .form-select,
+.bazaar-catalog .form-control {
+  background-color: #5C556C;
+  border-color: #748BBB;
+  color: #CDC7B7;
 }
 
-.budget-info small.text-muted {
-    font-size: 0.8rem;
-    margin-top: 0.2rem;
-    display: block;
+.bazaar-catalog .btn-primary {
+  background-color: #748BBB;
+  color: #10111F;
 }
 
-/* Общие стили карточки */
-.card {
-    position: relative; /* Для позиционирования budget-info */
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    min-height: 250px; /* Минимальная высота карточки */
+.bazaar-catalog .btn-primary:hover {
+  background-color: #82779F;
+  color: #CDC7B7;
 }
 
-.card-title {
-    font-weight: bold;
-    margin-bottom: 0.75rem;
+/* Карточки */
+.bazaar-catalog .card {
+  background-color: #5C556C;
+  border-radius: 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card-text {
-    margin-bottom: 1rem;
+.bazaar-catalog .card-body {
+  flex-grow: 1;
+  padding: 1rem;
 }
 
-.card-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
+.bazaar-catalog .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-.btn-primary {
-    width: 100%;
-    margin-top: auto; /* Кнопка всегда внизу карточки */
+.bazaar-catalog .card-title {
+  color: #CDC7B7;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
 }
 
-/* Отступы между карточками */
-.row-cols-1 > .col {
-    margin-bottom: 1.5rem;
+.bazaar-catalog .card-text {
+  color: #EDE9DC;
+  margin-top: auto;
+}
+
+/* Акценты */
+.bazaar-catalog .budget-info {
+  color: #C6D3FF;
+  font-size: 18px;
+}
+
+.bazaar-catalog .text-muted{
+  color: #b2d3ff !important;
+}
+
+/* Пагинация */
+.bazaar-catalog .pagination .page-link {
+  color: #CDC7B7;
+  background-color: transparent;
+  border: 1px solid #748BBB;
+}
+
+.bazaar-catalog .pagination .page-item.active .page-link {
+  z-index: 3;
+  color: #CDC7B7;
+  background-color: #5C556C;
+  border-color: #5C556C;
+}
+
+.bazaar-catalog .pagination .page-link:hover {
+  color: #CDC7B7;
+  background-color: #748BBB;
+  border-color: #748BBB;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }

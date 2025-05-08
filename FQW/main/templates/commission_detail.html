@@ -14,12 +14,16 @@
         <div class="carousel-inner">
           <!-- Commission cover image -->
           <div class="carousel-item active">
-            <img src="{{ commission.image.url }}" class="d-block w-100 rounded" alt="Commission Cover">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#viewImageModal" data-image="{{ commission.image.url }}">
+              <img src="{{ commission.image.url }}" class="d-block w-100 rounded" alt="Commission Cover">
+            </a>
           </div>
           <!-- Portfolio images -->
           {% for item in portfolios %}
           <div class="carousel-item">
-            <img src="{{ item.image.url }}" class="d-block w-100 rounded" alt="Portfolio Image">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#viewImageModal" data-image="{{ item.image.url }}">
+              <img src="{{ item.image.url }}" class="d-block w-100 rounded" alt="Portfolio Image">
+            </a>
           </div>
           {% endfor %}
         </div>
@@ -31,6 +35,12 @@
           <span class="carousel-control-next-icon" aria-hidden="true"></span>
           <span class="visually-hidden">Next</span>
         </button>
+        <ol class="carousel-indicators">
+           <li data-bs-target="#commissionCarousel" data-bs-slide-to="0" class="active"></li>
+          {% for item in portfolios %}
+            <li data-bs-target="#commissionCarousel" data-bs-slide-to="{{ forloop.counter }}"></li>
+          {% endfor %}
+        </ol>
       </div>
 
       <!-- Title and Description -->
@@ -59,7 +69,7 @@
       <div class="tab-content border border-top-0 p-3">
         {% if basic_option %}
         <div class="tab-pane fade show active" id="option-basic" role="tabpanel">
-          <h4>{{ basic_option.price }} ₽</h4>
+          <h4 class="formatted-price">{{ basic_option.price }} ₽</h4>
           <p>{{ basic_option.description }}</p>
           <ul class="list-unstyled">
             <li>Срок выполнения: {{ basic_option.deadline }} дней</li>
@@ -130,18 +140,53 @@
       </div>
 
       <!-- Author Info -->
+
       <div class="card mt-4 p-3">
         <div class="d-flex align-items-center">
-          <img src="{{ commission.user.profile.image.url }}" alt="Avatar" class="rounded-circle me-3" width="60" height="60">
-          <div>
-            <h5 class="mb-0">{{ commission.user.profile.user.username }}</h5>
-            <small>Рейтинг: {{ commission.user.profile.ratings }}</small>
-          </div>
+          <a href="{% url 'profile_detail' username=commission.user.username %}" class="text-decoration-none">
+            <div class="d-flex align-items-center">
+              <img src="{{ commission.user.profile.image.url }}" alt="Avatar" class="rounded-circle me-3 profile-avatar" width="60" height="60">
+              <div>
+                <p class="mb-0">{{ commission.user.profile.user.username }}</p>
+                <small>Рейтинг: {{ commission.user.profile.ratings }}</small>
+              </div>
+            </div>
+          </a>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Модальное окно для просмотра изображений -->
+<div class="modal fade" id="viewImageModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-body text-center">
+        <!-- Слайдер для изображений в модальном окне -->
+        <div id="imageCarousel" class="carousel slide">
+          <div class="carousel-inner">
+            <!-- Изображения будут добавляться динамически через JavaScript -->
+          </div>
+          <!-- Кнопки управления слайдером -->
+          <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+          <!-- Индикаторы -->
+          <ol class="carousel-indicators">
+            <!-- Индикаторы будут добавляться динамически через JavaScript -->
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Подключение модального окна -->
 {% include 'message_modal.html' %}
 {% endblock %}
@@ -205,5 +250,51 @@
     })
     .catch(error => console.error('Error:', error));
   }
+</script>
+<script>
+document.querySelectorAll('#commissionCarousel .carousel-item a').forEach(link => {
+  link.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    // Получаем URL текущего изображения
+    const imageUrl = this.getAttribute('data-image');
+
+    // Очищаем содержимое модального окна
+    document.querySelector('#imageCarousel .carousel-inner').innerHTML = '';
+    document.querySelector('#imageCarousel .carousel-indicators').innerHTML = '';
+
+    // Создаём слайды для всех изображений
+    let carouselHTML = '';
+    let indicatorsHTML = '';
+    let currentIndex = 0;
+
+    // Проходим по всем изображениям в карусели
+    document.querySelectorAll('#commissionCarousel .carousel-item').forEach((item, index) => {
+      const imgSrc = item.querySelector('img').src;
+      const isActive = index === currentIndex ? 'active' : '';
+      carouselHTML += `
+        <div class="carousel-item ${isActive}">
+          <img src="${imgSrc}" class="d-block w-100" alt="Image ${index + 1}">
+        </div>
+      `;
+      indicatorsHTML += `
+        <li data-bs-target="#imageCarousel" data-bs-slide-to="${index}" ${isActive ? 'class="active"' : ''}></li>
+      `;
+    });
+
+    // Заполняем модальное окно
+    document.querySelector('#imageCarousel .carousel-inner').innerHTML = carouselHTML;
+    document.querySelector('#imageCarousel .carousel-indicators').innerHTML = indicatorsHTML;
+
+    // Активируем Bootstrap Carousel
+    var imageCarousel = new bootstrap.Carousel(document.getElementById('imageCarousel'), {
+      interval: false
+    });
+
+    // Открываем модальное окно
+    var viewImageModal = new bootstrap.Modal(document.getElementById('viewImageModal'));
+    viewImageModal.show();
+  });
+});
 </script>
 {% endblock %}

@@ -1,20 +1,22 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/CommissionsCatalog.css' %}">
-{% endblock %}
 
 {% block title %} Каталог коммишек {% endblock %}
 
+{% block extra_css %}
+    <link href="{% static 'css/CommissionsCatalog.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
+<div class="commissions-catalog">
     <div class="container mt-5">
         <h2 class="text-center mb-4">Каталог коммишек</h2>
 
         <!-- Форма фильтров -->
         <form method="get" class="row g-3 mb-4">
             <div class="col-md-3">
-                <label for="typeFilter" class="form-label">Тип</label>
+                <label for="typeFilter" class="form-label"></label>
                 <select id="typeFilter" name="type" class="form-select">
                     <option value="">Все типы</option>
                     {% for type in types %}
@@ -25,11 +27,11 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="priceFilter" class="form-label">Минимальная стоимость</label>
-                <input type="number" id="priceFilter" name="price" class="form-control" placeholder="Минимальная цена" value="{{ request.GET.price }}">
+                <label for="priceFilter" class="form-label"></label>
+                <input type="number" id="priceFilter" name="price" class="form-control price-input" placeholder="Минимальная цена" value="{{ request.GET.price }}">
             </div>
             <div class="col-md-3">
-                <label for="deadlineFilter" class="form-label">Максимальный срок выполнения</label>
+                <label for="deadlineFilter" class="form-label"></label>
                 <input type="number" id="deadlineFilter" name="deadline" class="form-control" placeholder="Максимальный срок (дней)" value="{{ request.GET.deadline }}">
             </div>
             <div class="col-md-3 align-self-end">
@@ -51,13 +53,13 @@
         <div class="row row-cols-1 row-cols-md-3 g-4">
             {% for commission in commissions %}
                 <div class="col">
-                    <div class="card h-100">
+                    <div class="card commission-card h-100">
                         <img src="{{ commission.image.url }}" class="card-img-top" alt="{{ commission.title }}">
                         <div class="card-body">
                             <h5 class="card-title">{{ commission.title }}</h5>
                             <p class="card-text">
                                 Автор: {{ commission.user.username }}<br>
-                                Стоимость: От {{ commission.min_price }} ₽<br>
+                                Стоимость: От <span class="formatted-price">{{ commission.min_price }} ₽</span><br>
                                 Срок: {{ commission.deadline }} дней
                             </p>
                             <a href="{% url 'commission_detail' commission.pk %}" class="btn btn-primary">Подробнее</a>
@@ -90,4 +92,15 @@
             </ul>
         </nav>
     </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Форматирование существующих цен на странице
+  document.querySelectorAll('.formatted-price').forEach(element => {
+    element.textContent = element.textContent.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1 ');
+  });
+});
+</script>
 {% endblock %}

@@ -124,8 +124,13 @@ class ProfileForm(forms.ModelForm):
         model = Profile
         fields = ['specialization', 'description', 'image', 'skills']
         widgets = {
-            'skills': forms.SelectMultiple(),
+            'skills': forms.SelectMultiple(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(ProfileForm, self).__init__(*args, **kwargs)
+        # Убедитесь, что поле skills заполнено
+        self.fields['skills'].queryset = Skills.objects.all()
 
 class ReviewForm(forms.ModelForm):
     class Meta:

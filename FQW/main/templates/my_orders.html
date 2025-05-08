@@ -2,6 +2,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/MyOrders.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
   <h2 class="mb-4">Мои заказы</h2>

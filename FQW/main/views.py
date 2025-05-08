@@ -469,6 +469,8 @@ def profile_detail(request, username):
 @login_required
 def edit_profile(request):
     profile = request.user.profile
+    all_skills = Skills.objects.all()
+
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
@@ -480,7 +482,8 @@ def edit_profile(request):
     # Если форма не валидна или это GET-запрос
     context = {
         'profile': profile,
-        'form': form
+        'form': form,
+        'all_skills': all_skills,
     }
     return render(request, 'profile.html', context)  # Всегда рендерим profile.html
 
@@ -573,6 +576,7 @@ def order_detail_view(request, pk):
         'order': order,
         'dispute': dispute,
         'messages': messages,
+        'timeline': timeline,
         'selected_option': selected_option,
         'additional_options': additional_options,
         'delivers': delivers,
@@ -755,6 +759,13 @@ def request_revisions(request, pk):
             order=order,
             customer=request.user,
             comment=comment
+        )
+
+        # Создаем сообщение в чате
+        Message.objects.create(
+            order=order,
+            sender=request.user,
+            text=f"Запросил(а) правки: {comment}"
         )
 
         # Обновляем статус заказа

@@ -214,10 +214,10 @@ class OrderCancellation(models.Model):
 
 # Модель дополнительных опций
 class BonusOption(models.Model):
-    name = models.CharField(max_length=255)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField()
-    deadline = models.IntegerField()
+    name = models.CharField(verbose_name='Название', max_length=255)
+    price = models.DecimalField(verbose_name='Цена', max_digits=10, decimal_places=2)
+    description = models.TextField(verbose_name='Описание')
+    deadline = models.IntegerField(verbose_name='Срок выполнения (дней)')
 
     def __str__(self):
         return self.name
