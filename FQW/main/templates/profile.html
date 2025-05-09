@@ -22,16 +22,27 @@
         </button>
       {% else %}
         <!-- Для посетителей -->
-        <div class="d-flex flex-column align-items-center">
-          <img src="{{ profile.user.profile.image.url }}" alt="{{ profile.user.profile.user.username }}" class="rounded-circle me-2" width="40">
-          <span>{{ profile.user.profile.user.username }}</span>
+        <div class="profile-actions-container">
+          <div class="d-flex align-items-center mb-3">
+            <img src="{{ profile.user.profile.image.url }}" alt="{{ profile.user.profile.user.username }}" class="rounded-circle me-2 profile-avatar" width="40">
+            <div class="d-flex flex-column">
+              <strong>{{ profile.user.username }}</strong>
+              <small class="text-muted mt-1">
+                {% if profile.user.profile.ratings %}
+                  <i class="bi bi-star-fill text-warning"></i> {{ profile.user.profile.ratings|floatformat:1 }}
+                {% else %}
+                  Нет рейтинга
+                {% endif %}
+              </small>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-connect w-100">Связаться со мной</button>
+            <button type="button" class="btn btn-favorite" onclick="toggleFavoriteArtist(event, {{ profile.user.id }})" data-artist-id="{{ profile.user.id }}">
+              <i class="bi {% if in_favorite %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+            </button>
+          </div>
         </div>
-        <button type="button" class="btn btn-secondary w-100 mt-2" data-bs-toggle="modal" data-bs-target="#messageModal">
-          Связаться со мной
-        </button>
-        <button type="button" class="btn btn-light w-100 mt-2" onclick="toggleFavoriteArtist({{ profile.user.id }})">
-          <i class="bi bi-heart-fill text-danger"></i> Добавить в избранное
-        </button>
       {% endif %}
     </div>
   </div>
@@ -54,91 +65,162 @@
     </div>
   </div>
 
-  <h5>Мои коммишки</h5>
-    <div class="row row-cols-4 g-3">
-      {% for commission in profile.user.commission_set.all %}
-        <div class="col">
-            <a href="{% url 'commission_detail' commission.id %}" class="text-decoration-none text-dark">
-              <div class="card h-100">
-                <img src="{{ commission.image.url }}" class="card-img-top" alt="{{ commission.title }}">
-                <div class="card-body">
-                  <h6 class="card-title">{{ commission.title }}</h6>
-                  <p class="card-text">От <span class="formatted-price"> {{ commission.min_price }}</span>₽</p>
-                </div>
-              </div>
-            </a>
-        </div>
-      {% empty %}
-        <p>Нет активных коммиссий.</p>
-      {% endfor %}
-    </div>
-    <div class="text-end mt-3">
+    <!-- Мои коммишки -->
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+      <h5>Мои коммишки</h5>
       {% if request.user == profile.user %}
-        <a href="{% url 'create_commission' %}" class="btn btn-success">Создать коммишку</a>
+        <a href="{% url 'create_commission' %}" class="btn btn-success btn-sm">Создать коммишку</a>
       {% endif %}
     </div>
-
-  <h5>Портфолио</h5>
-    <div class="row row-cols-4 g-3">
-      {% for portfolio in profile.user.portfolio_set.all %}
-        <div class="col">
-          <div class="card h-100">
-            <img src="{{ portfolio.image.url }}" class="card-img-top" alt="{{ portfolio.description }}" data-bs-toggle="modal" data-bs-target="#portfolioModal{{ portfolio.id }}">
+    <div class="horizontal-scroll-container mb-4">
+      <div class="horizontal-scroll">
+        {% for commission in profile.user.commission_set.all|slice:":4" %}
+        <a href="{% url 'commission_detail' commission.id %}">
+          <div class="scroll-card card h-100">
+            <img src="{{ commission.image.url }}" class="card-img-top" alt="{{ commission.title }}">
             <div class="card-body">
-              {% if portfolio.description %}
-                <p class="card-text">{{ portfolio.description }}</p>
+              <h6 class="card-title">{{ commission.title }}</h6>
+              <p class="card-text">От <span class="formatted-price">{{ commission.min_price }}</span> ₽</p>
+              {% if request.user == profile.user %}
+                <button type="button" class="btn btn-danger delete-button"
+                        data-id="{{ commission.id }}"
+                        data-type="commission"
+                        onclick="confirmDelete(event, 'commission', {{ commission.id }})">
+                  <i class="bi bi-trash-fill"></i> Удалить
+                </button>
               {% endif %}
             </div>
           </div>
+        </a>
+        {% empty %}
+        <p>Нет активных коммишек.</p>
+        {% endfor %}
+      </div>
+
+  <!-- Портфолио -->
+  <h5>Портфолио</h5>
+  <div class="horizontal-scroll-container mb-4">
+    <div class="horizontal-scroll">
+      {% for portfolio in profile.user.portfolio_set.all%}
+      <div class="scroll-card card h-100">
+        <img src="{{ portfolio.image.url }}" class="card-img-top" alt="{{ portfolio.description }}" data-bs-toggle="modal" data-bs-target="#portfolioModal{{ portfolio.id }}">
+        <div class="card-body">
+          {% if portfolio.description %}
+            <p class="card-text">{{ portfolio.description }}</p>
+          {% endif %}
+          {% if request.user == profile.user %}
+            <button type="button" class="btn btn-danger delete-button"
+                    data-id="{{ portfolio.id }}"
+                    onclick="confirmDelete(event, 'portfolio', {{ portfolio.id }})">
+              <i class="bi bi-trash-fill"></i>Удалить
+            </button>
+          {% endif %}
         </div>
+      </div>
       {% empty %}
         <p>Нет работ в портфолио.</p>
       {% endfor %}
-      {% if request.user == profile.user %}
-        <div class="col">
-          <div class="card h-100 text-center">
-            <button type="button" class="btn btn-add-work w-100" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
-              Добавить работу
-            </button>
-          </div>
-        </div>
-      {% endif %}
     </div>
-
-    <!-- Модальное окно для работы в портфолио -->
-    <div class="modal fade" id="portfolioModal{{ portfolio.id }}" tabindex="-1" aria-labelledby="portfolioModalLabel{{ portfolio.id }}" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="portfolioModalLabel{{ portfolio.id }}">Работа из портфолио</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Кнопка для добавления работы -->
+      {% if request.user == profile.user %}
+      <div class="col">
+        <div class="card h-100 text-center">
+          <button type="button" class="btn btn-add-work w-100" data-bs-toggle="modal" data-bs-target="#addPortfolioModal">
+            Добавить работу
+          </button>
+        </div>
+      </div>
+      {% endif %}
+  </div>
+  <!-- Объявления на бирже -->
+  <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+  <h5>Объявления на бирже</h5>
+    <!-- Кнопка для создания объявления на бирже -->
+      {% if request.user == profile.user %}
+        <a href="{% url 'create_bid' %}" class="btn btn-primary">Создать объявление на бирже</a>
+      {% endif %}
+  </div>
+  <div class="horizontal-scroll-container mb-4">
+    <div class="horizontal-scroll">
+      {% for bid in profile.user.birzha_set.all %}
+      <div class="scroll-card-birzha">
+        <a href="{% url 'offer_service' bid.id %}">
+          <div class="card-body">
+            <h6 class="card-title">{{ bid.title }}</h6>
+            <p class="card-text">{{ bid.description|truncatewords:10 }}</p>
           </div>
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-8">
-                <img src="{{ portfolio.image.url }}" class="img-fluid rounded" alt="{{ portfolio.description }}">
+        </a>
+        {% if request.user == profile.user %}
+          <button type="button" class="btn btn-danger delete-button"
+                  data-id="{{ bid.id }}"
+                  onclick="confirmDelete(event, 'bid', {{ bid.id }})">
+            <i class="bi bi-trash-fill"></i> Удалить
+          </button>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p>Нет объявлений на бирже.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Отзывы -->
+  <h5>Отзывы</h5>
+  <ul class="list-unstyled mb-4">
+    {% for review in reviews %}
+    <li class="d-flex align-items-start mb-3 border-bottom pb-3">
+      <img src="{{ review.customer.profile.image.url }}" alt="Аватар" width="40" class="rounded-circle me-3">
+      <div>
+        <strong>{{ review.customer.username }}</strong>
+        <p class="mb-1">{{ review.comment }}</p>
+        <small class="text-muted d-block">
+          Оценка: {{ review.result_rating }}/5 |
+          Коммуникация: {{ review.communication_rating }}/5 |
+          Рекомендация: {{ review.recommend_rating }}/5
+        </small>
+      </div>
+    </li>
+    {% empty %}
+    <p class="text-muted">Нет отзывов.</p>
+    {% endfor %}
+  </ul>
+
+    {% for portfolio in profile.user.portfolio_set.all %}
+      <div class="modal fade portfolio-modal" id="portfolioModal{{ portfolio.id }}" tabindex="-1" aria-labelledby="portfolioModalLabel{{ portfolio.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content bg-dark text-light rounded-3 shadow-lg">
+            <!-- Заголовок -->
+            <div class="modal-header border-0 pb-0">
+              <h5 class="modal-title" id="portfolioModalLabel{{ portfolio.id }}">Работа из портфолио</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Тело модального окна -->
+            <div class="modal-body p-0">
+              <div class="row g-0">
+                <div class="col-md-8 p-3 d-flex align-items-center">
+                  <img src="{{ portfolio.image.url }}" class="img-fluid rounded-start" alt="{{ portfolio.description }}">
+                </div>
+                <div class="col-md-4 p-4 bg-secondary-subtle text-dark rounded-end" style="background-color: #5C556C;">
+                  <h6>Описание</h6>
+                  <p>{{ portfolio.description }}</p>
+                </div>
               </div>
-              <div class="col-md-4">
-                <h6>Описание</h6>
-                <p>{{ portfolio.description }}</p>
-              </div>
+            </div>
+
+            <!-- Подвал с навигацией -->
+            <div class="modal-footer border-0 justify-content-between w-100 mx-auto">
+              <button class="btn btn-outline-light btn-sm prev-button" onclick="showPreviousPortfolio()">
+                ❮ Предыдущая
+              </button>
+              <button class="btn btn-outline-light btn-sm next-button" onclick="showNextPortfolio()">
+                Следующая ❯
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  <h5>Отзывы</h5>
-    <ul>
-      {% for review in profile.user.reviews_received.all %}
-        <li>
-          <img src="{{ review.customer.profile.image.url }}" alt="">
-          <p>{{ review.comment }}</p>
-          <div>Оценка: {{ review.rating }}/5</div>
-        </li>
-      {% empty %}
-        <p>Нет отзывов</p>
       {% endfor %}
-    </ul>
 
   <!-- Модальное окно для добавления работы -->
     <div class="modal fade" id="addPortfolioModal" tabindex="-1" aria-labelledby="addPortfolioModalLabel" aria-hidden="true">
@@ -178,6 +260,7 @@
       <div class="modal-body">
         <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data">
           {% csrf_token %}
+          <p>Навыков в форме: {{ form.fields.skills.queryset.count }}</p>
           <!-- Блок для отображения ошибок -->
           {% if form.errors %}
             <div class="alert alert-danger">
@@ -207,15 +290,38 @@
               <img src="{{ profile.image.url }}" alt="Текущий аватар" class="mt-2 img-thumbnail" style="max-width: 200px;">
             {% endif %}
           </div>
+          <!-- Отладочная информация -->
+          <p><strong>Количество навыков:</strong> {{ all_skills|length }}</p>
+          <ul>
+            {% for skill in all_skills %}
+              <li>{{ skill.name }}</li>
+            {% empty %}
+              <li>❌ Нет навыков в all_skills</li>
+            {% endfor %}
+          </ul>
+
+          <!-- Поле навыков -->
           <div class="mb-3">
             <label class="form-label">Навыки</label>
-             {{ form.skills }}
-              {% if form.skills.errors %}
-                <div class="alert alert-danger mt-2">
-                  {{ form.skills.errors }}
+            {% if all_skills %}
+              {% for skill in all_skills %}
+                <div class="form-check">
+                  <input type="checkbox"
+                         name="skills"
+                         value="{{ skill.id }}"
+                         {% if skill in profile.skills.all %}checked{% endif %}
+                         class="form-check-input"
+                         id="id_skill_{{ skill.id }}">
+                  <label class="form-check-label" for="id_skill_{{ skill.id }}">
+                    {{ skill.name }}
+                  </label>
                 </div>
-              {% endif %}
+              {% endfor %}
+            {% else %}
+              <p class="text-muted">Нет доступных навыков</p>
+            {% endif %}
           </div>
+
           <button type="submit" class="btn btn-primary">Сохранить</button>
         </form>
       </div>
@@ -225,67 +331,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  function toggleFavoriteArtist(artistId) {
-    fetch(`/toggle-favorite-artist/${artistId}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': '{{ csrf_token }}',
-      },
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        const button = document.querySelector(`[onclick="toggleFavoriteArtist(${artistId})"]`);
-        const icon = button.querySelector('i');
-        const buttonText = button.querySelector('span');
-
-        if (data.is_favorite) {
-          icon.classList.add('text-danger'); // Сердце красное
-          buttonText.textContent = 'Удалить из избранного';
-        } else {
-          icon.classList.remove('text-danger'); // Сердце серое
-          buttonText.textContent = 'Добавить в избранное';
-        }
-      } else {
-        alert('Ошибка при обновлении избранного.');
-      }
-    })
-    .catch(error => console.error('Error:', error));
-  }
-
-  function sendMessage(recipientId) {
-    const messageContent = document.getElementById('messageText').value;
-    if (!messageContent.trim()) {
-      alert('Введите текст сообщения');
-      return;
-    }
-
-    fetch('/send-message/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': '{{ csrf_token }}',
-      },
-      body: JSON.stringify({
-        recipient: recipientId,
-        content: messageContent,
-      }),
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert('Сообщение успешно отправлено!');
-        document.getElementById('messageText').value = '';
-        $('#messageModal').modal('hide');
-      } else {
-        alert('Ошибка при отправке сообщения.');
-      }
-    })
-    .catch(error => console.error('Error:', error));
-  }
-</script>
 <script>
 // Анимация появления карточек при загрузке
 document.addEventListener("DOMContentLoaded", function () {
@@ -309,5 +354,144 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+<script>
+function toggleFavoriteArtist(event, artistId) {
+  const button = event.target.closest('button');
+  const icon = button.querySelector('i');
 
+  fetch(`/toggle-favorite-artist/${artistId}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({ artist_id: artistId })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.is_favorite) {
+      icon.classList.remove('bi-heart');
+      icon.classList.add('bi-heart-fill', 'text-danger');
+      localStorage.setItem(`favorite_${artistId}`, 'true');
+    } else {
+      icon.classList.remove('bi-heart-fill', 'text-danger');
+      icon.classList.add('bi-heart');
+      localStorage.removeItem(`favorite_${artistId}`);
+    }
+
+    alert(data.message);
+  })
+  .catch(error => console.error('Ошибка:', error));
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const favoriteButtons = document.querySelectorAll('.btn-favorite');
+
+  favoriteButtons.forEach(button => {
+    const artistId = button.getAttribute('data-artist-id');
+
+    if (!artistId) return;
+
+    const isFavorite = localStorage.getItem(`favorite_${artistId}`) === 'true';
+    const icon = button.querySelector('i');
+
+    if (isFavorite) {
+      icon.classList.remove('bi-heart');
+      icon.classList.add('bi-heart-fill', 'text-danger');
+    }
+  });
+});
+function confirmDelete(event, type, itemId) {
+    if (!confirm("Вы уверены, что хотите удалить этот элемент?")) {
+        event.preventDefault();
+        return;
+    }
+
+    let url = '';
+    switch (type) {
+        case 'portfolio':
+            url = "{% url 'delete_portfolio' portfolio_id=0 %}".replace('0', itemId);
+            break;
+        case 'commission':
+            url = "{% url 'delete_commission' commission_id=0 %}".replace('0', itemId);
+            break;
+        case 'bazaar':
+            url = "{% url 'delete_bazaar' bid_id=0 %}".replace('0', itemId);
+            break;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById(`${type}-${itemId}`).remove();
+            alert("Элемент успешно удален");
+        } else {
+            alert("Ошибка: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert("Произошла ошибка при удалении");
+    });
+}
+</script>
+<script>
+// Переменные для переключения
+let currentPortfolioIndex = 0;
+let portfolioModals = [];
+
+function initPortfolioNavigation() {
+  portfolioModals = Array.from(document.querySelectorAll('.portfolio-modal'));
+}
+
+function setCurrentPortfolioId(id) {
+  currentPortfolioIndex = portfolioModals.findIndex(el => el.id === `portfolioModal${id}`);
+}
+
+function showNextPortfolio() {
+  const total = portfolioModals.length;
+  if (total <= 1) return;
+
+  // Скрываем текущее окно
+  const currentModal = bootstrap.Modal.getInstance(portfolioModals[currentPortfolioIndex]);
+  currentModal.hide();
+
+  // Открываем следующее
+  currentPortfolioIndex = (currentPortfolioIndex + 1) % total;
+  const nextModal = new bootstrap.Modal(portfolioModals[currentPortfolioIndex]);
+  nextModal.show();
+}
+
+function showPreviousPortfolio() {
+  const total = portfolioModals.length;
+  if (total <= 1) return;
+
+  // Скрываем текущее окно
+  const currentModal = bootstrap.Modal.getInstance(portfolioModals[currentPortfolioIndex]);
+  currentModal.hide();
+
+  // Открываем предыдущее
+  currentPortfolioIndex = (currentPortfolioIndex - 1 + total) % total;
+  const prevModal = new bootstrap.Modal(portfolioModals[currentPortfolioIndex]);
+  prevModal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  initPortfolioNavigation();
+
+  // При открытии модального окна обновляем индекс
+  document.querySelectorAll('.portfolio-modal').forEach((modalEl, index) => {
+    modalEl.addEventListener('shown.bs.modal', function () {
+      currentPortfolioIndex = index;
+    });
+  });
+});
+</script>
 {% endblock %}

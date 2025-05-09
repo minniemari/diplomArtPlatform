@@ -1,10 +1,63 @@
-textarea {
-    border-radius: 8px;
-    padding: 10px;
-    width: calc(100% - 20px);
+/* register.css */
+
+.card {
+    background-color: #10111F;
+    border-radius: 1rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
-input {
-    border-radius: 8px;
-    padding: 10px;
-    width: calc(100% - 20px);
+
+.card-body {
+    padding: 2rem;
+}
+
+.card-title {
+    color: #CDC7B7;
+    font-weight: bold;
+}
+
+.form-label {
+    color: #CDC7B7;
+    font-weight: 500;
+}
+
+.form-control {
+    background-color: #24252A;
+    color: #CDC7B7;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+}
+
+
+.form-control::placeholder {
+    color: #999;
+}
+
+.form-control:focus {
+    color: #999;
+    background-color: #2E303E;
+    box-shadow: 0 0 0 0.2rem rgba(116, 139, 187, 0.2);
+    border-color: #748BBB;
+}
+
+.btn-primary {
+    background-color: #748BBB;
+    color: #10111F;
+    font-weight: bold;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #82779F;
+    transform: scale(1.02);
+}
+
+.text-decoration-none {
+    color: #748BBB;
+}
+
+.text-decoration-none:hover {
+    color: #CDC7B7;
 }

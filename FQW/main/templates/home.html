@@ -4,6 +4,8 @@
 {% block title %}Главная страница{% endblock %}
 
 {% block content %}
+
+<!-- Информация о том, что такое коммишки и биржа -->
 <div class="mb-4 p-4 rounded" style="background-color: #5C556C;">
     <h1 class="text-light">Что такое коммишки и биржа?</h1>
     <p class="text-light">
@@ -15,21 +17,55 @@
     </p>
 </div>
 
-<h2 class="mb-4 text-light">Доступные коммишки</h2>
-<div class="row">
-    {% for commission in commissions %}
-    <div class="col-sm-6 col-md-4 mb-4">
-        <div class="card h-100 shadow-sm commission-card">
-            <img src="{{ commission.image.url }}" class="card-img-top" alt="Коммишка">
-            <div class="card-body d-flex flex-column">
-                <h5 class="card-title">{{ commission.title }}</h5>
-                <p class="card-text">{{ commission.description|truncatechars:50 }}</p>
-                <a href="{% url 'commission_detail' commission.id %}" class="btn btn-commission mt-auto">Подробнее</a>
+<!-- Последние коммишки -->
+<h2 class="mb-4 text-light">Новые коммишки</h2>
+<div class="row mb-5">
+    {% if commissions %}
+        {% for commission in commissions %}
+        <div class="col-sm-6 col-md-3 mb-4">
+            <div class="card h-100 shadow-sm commission-card">
+                <img src="{{ commission.image.url }}" class="card-img-top" alt="{{ commission.title }}">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ commission.title }}</h5>
+                    <p class="card-text">{{ commission.description|truncatechars:50 }}</p>
+                    <a href="{% url 'commission_detail' commission.id %}" class="btn btn-commission mt-auto">Подробнее</a>
+                </div>
             </div>
         </div>
-    </div>
-    {% empty %}
-    <p class="text-light">Нет доступных коммишенов.</p>
-    {% endfor %}
+        {% endfor %}
+    {% else %}
+        <p class="text-light">Нет доступных коммишек.</p>
+    {% endif %}
 </div>
+
+<!-- Кнопка перехода к каталогу коммишек -->
+<div class="text-center mb-5">
+    <a href="{% url 'commissions_catalog' %}" class="btn btn-outline-light btn-lg">Смотреть все коммишки</a>
+</div>
+
+<!-- Последние объявления на бирже -->
+<h2 class="mb-4 text-light">Новые объявления на бирже</h2>
+<div class="row mb-5">
+    {% if bids %}
+        {% for bid in bids %}
+        <div class="col-sm-6 col-md-3 mb-4">
+            <div class="card h-100 shadow-sm commission-card">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ bid.title }}</h5>
+                    <p class="card-text">{{ bid.description|truncatechars:50 }}</p>
+                    <a href="{% url 'offer_service' bid.id %}" class="btn btn-commission mt-auto">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-light">Нет объявлений на бирже.</p>
+    {% endif %}
+</div>
+
+<!-- Кнопка перехода к бирже -->
+<div class="text-center mb-5">
+    <a href="{% url 'bazaar_catalog' %}" class="btn btn-outline-light btn-lg">Смотреть все объявления на бирже</a>
+</div>
+
 {% endblock %}

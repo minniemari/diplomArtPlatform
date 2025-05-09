@@ -39,6 +39,14 @@
             <div class="col-md-3 align-self-end">
                 <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
             </div>
+            <!-- Кнопка "Опубликовать проект на бирже" -->
+            {% if request.user.is_authenticated %}
+                <div class="col-md-3 align-self-end">
+                    <a href="{% url 'create_bid' %}" class="btn btn-secondary w-100">
+                        <i class="bi bi-plus-lg me-1"></i> Опубликовать проект на бирже
+                    </a>
+                </div>
+            {% endif %}
         </form>
 
         <!-- Заказы -->

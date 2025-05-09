@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from .forms import *
 from .models import *
-from django.db.models import Min
+from django.db.models import Min, Q
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -14,7 +14,10 @@ from django.utils.timezone import now, timedelta
 from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 from django.forms import modelformset_factory
-
+from django.forms.models import model_to_dict
+from django.utils.safestring import mark_safe
+import json
+from django.views.decorators.csrf import csrf_exempt
 import os
 
 
@@ -42,6 +45,19 @@ def register(request):
         print("Ошибки в форме:", form.errors)
     return render(request, 'register.html', {'form': form})
 
+def custom_login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
 
 @login_required
 def create_commission(request):
@@ -179,8 +195,16 @@ def commission_success(request):
     return render(request, 'commission_success.html')
 
 def home(request):
-    commissions = Commission.objects.all()
-    return render(request, 'home.html', {'commissions': commissions})
+    # Получаем последние 4 коммишки
+    latest_commissions = Commission.objects.all().order_by('-id')[:4]
+
+    # Получаем последние 4 объявления на бирже
+    latest_bids = Birzha.objects.all().order_by('-id')[:4]
+
+    return render(request, 'home.html', {
+        'commissions': latest_commissions,
+        'bids': latest_bids,
+    })
 
 # @login_required
 # def commission_detail(request, pk):
@@ -234,14 +258,14 @@ def order_form(request, pk):
             user_response.customer = request.user
             user_response.commission = commission
             user_response.price = total_price
-            user_response.delivery_time = now() + timedelta(days=total_deadline)
+            user_response.package_deadline = selected_option.deadline
             user_response.description = selected_option.description
 
             # Сохраняем данные о пакете
             user_response.package_type = selected_option.package_type
             user_response.package_description = selected_option.description
             user_response.package_price = selected_option.price
-            user_response.package_deadline = selected_option.deadline
+            user_response.delivery_time = total_deadline
 
             user_response.save()
 
@@ -258,7 +282,7 @@ def order_form(request, pk):
 
             # Обновляем общую стоимость и срок выполнения
             user_response.price = total_price
-            user_response.delivery_time = now() + timedelta(days=total_deadline)
+            user_response.delivery_time = total_deadline
             user_response.save()
 
             # Обработка файлов
@@ -267,7 +291,7 @@ def order_form(request, pk):
                     stored_file = File.objects.create(user=request.user, file=file)
                     user_response.files.add(stored_file)
 
-            return redirect('commission_success')
+            return redirect('my_orders')
     else:
         form = UserResponseForm()
 
@@ -292,11 +316,37 @@ def profile(request):
 def create_bid(request):
     if request.method == 'POST':
         form = BirzhaForm(request.POST, request.FILES)
+
+        # Получаем список файлов
+        files = request.FILES.getlist('files')
+
+        # Проверка количества файлов
+        if len(files) > 10:
+            form.add_error('files', 'Максимум 10 файлов')
+            return render(request, 'create_bid.html', {'form': form})
+
+        # Проверка размера
+        total_size = sum(f.size for f in files)
+        if total_size > 100 * 1024 * 1024:
+            form.add_error('files', 'Общий размер файлов превышает 100 МБ')
+            return render(request, 'create_bid.html', {'form': form})
+
         if form.is_valid():
             bid = form.save(commit=False)
             bid.user = request.user
             bid.save()
-            return redirect('home')  # Перенаправление после успешного сохранения
+
+            # Сохраняем каждый файл в модели File
+            for uploaded_file in files:
+                file_instance = File.objects.create(
+                    user=request.user,
+                    file=uploaded_file,
+                    file_type='image' if uploaded_file.content_type.startswith('image/') else 'document' if uploaded_file.name.endswith(('.pdf', '.doc', '.psd')) else 'other'
+                )
+                bid.files.add(file_instance)
+
+            return redirect('bazaar_catalog')
+
     else:
         form = BirzhaForm()
 
@@ -442,6 +492,30 @@ def toggle_favorite_commission(request, commission_id):
     return JsonResponse({'success': False, 'message': 'Неверный запрос.'})
 
 @login_required
+def toggle_favorite_artist(request, artist_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Метод не поддерживается'})
+
+    try:
+        artist = User.objects.get(id=artist_id)
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Художник не найден'})
+
+    # Проверяем, есть ли уже в избранном
+    favorite, created = FavoriteArtist.objects.get_or_create(user=request.user, artist=artist)
+
+    is_favorite = True
+    if not created:
+        favorite.delete()
+        is_favorite = False
+
+    return JsonResponse({
+        'success': True,
+        'is_favorite': is_favorite,
+        'message': 'Добавлено в избранное' if is_favorite else 'Удалено из избранного',
+    })
+
+@login_required
 def add_portfolio(request):
     if request.method == 'POST':
         form = PortfolioForm(request.POST, request.FILES)
@@ -458,10 +532,20 @@ def add_portfolio(request):
 def profile_detail(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile = profile_user.profile
+    reviews = Review.objects.filter(order__artist=profile_user).select_related('order', 'customer', 'order__artist')
+    # ← ВАЖНО: Передаем все навыки в шаблон
+    all_skills = Skills.objects.all()
+
+    in_favorite = False
+    if request.user.is_authenticated:
+        in_favorite = FavoriteArtist.objects.filter(user=request.user, artist=profile_user).exists()
 
     context = {
         'profile': profile,
         'commissions': profile.user.commission_set.all(),
+        'in_favorite': in_favorite,
+        'reviews': reviews,
+        'all_skills': all_skills,  # ← Эта строка должна быть здесь
     }
     return render(request, 'profile.html', context)
 
@@ -469,23 +553,25 @@ def profile_detail(request, username):
 @login_required
 def edit_profile(request):
     profile = request.user.profile
-    all_skills = Skills.objects.all()
 
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect('profile', username=request.user.username)  # Перенаправляем на страницу профиля
+            return redirect('profile', username=request.user.username)
     else:
         form = ProfileForm(instance=profile)
 
-    # Если форма не валидна или это GET-запрос
+    # ← ВАЖНО: Передача all_skills в шаблон
+    all_skills = Skills.objects.all()
+
     context = {
         'profile': profile,
         'form': form,
-        'all_skills': all_skills,
+        'all_skills': all_skills,  # ← ЭТА СТРОКА ДОЛЖНА БЫТЬ
     }
-    return render(request, 'profile.html', context)  # Всегда рендерим profile.html
+
+    return render(request, 'edit_profile.html', context)
 
 @login_required
 def my_orders(request):
@@ -511,7 +597,7 @@ def order_detail_view(request, pk):
     order = Orders.objects.filter(response=response).first()
     messages = Message.objects.filter(chat__order=order).order_by('created_at') if order else Message.objects.none()
     revisions = RevisionRequest.objects.filter(order=order).order_by('created_at') if order else RevisionRequest.objects.none()
-    dispute = order.disputechat_set.filter(status='pending').first()
+    dispute = order.disputechat_set.filter(status='pending').first() if order else DisputeChat.objects.none()
     delivers = order.delivers.all() if order else []
 
     # Объединяем сообщения и правки в один временной ряд
@@ -561,6 +647,31 @@ def order_detail_view(request, pk):
                     #     order.status = 'discussion'
                     #     order.save()
                 return redirect('order_detail', pk=response.pk)
+        elif 'confirm_change' in request.POST:
+            # Например, переводим заказ в "in_work"
+            order.status = 'in_work'
+            order.save()
+
+            Message.objects.create(
+                chat=order.chat,
+                sender=request.user,
+                text="Заказчик подтвердил изменения. Работа начата.",
+                is_order_change=True
+            )
+
+            # Можно: Notification.objects.create(user=order.artist, ...)
+            return redirect('order_detail', pk=order.pk)
+
+        elif 'reject_change' in request.POST:
+            Message.objects.create(
+                chat=order.chat,
+                sender=request.user,
+                text="Заказчик отклонил предложенные изменения.",
+                is_order_change=True
+            )
+
+            # Можно: Notification.objects.create(user=order.artist, ...)
+            return redirect('order_detail', pk=order.pk)
         # Для заказчика: принятие заказа
         elif 'accept_order_customer' in request.POST:
             if order and request.user == order.customer and order.status == 'on_review':
@@ -603,7 +714,7 @@ def send_message(request, order_id):
             )
     return redirect('order_detail', pk=order.response.id)
 
-login_required
+@login_required
 def order_actions(request, pk):
     order = get_object_or_404(Orders, pk=pk)
     if request.user not in [order.artist, order.customer]:
@@ -818,15 +929,51 @@ def edit_response(request, pk):
 @login_required
 def edit_order(request, pk):
     response = get_object_or_404(UserResponse, pk=pk, artist=request.user)
+    order = Orders.objects.filter(response=response).first()
+    commission = response.commission  # Может быть None для биржи
+
+    if order.status != 'discussion':
+        return redirect('order_detail', pk=order.pk)
+
+    package_data = {}
+    extra_options = []
+
+    if commission:
+        options = commission.options.all()
+        extra_options = commission.bonus_options.all()
+
+        for opt in options:
+            package_data[opt.package_type] = {
+                'description': opt.description,
+                'features': {
+                    'Черновик': opt.is_sketch,
+                    'Для печати': opt.for_print,
+                    'Сложный фон': opt.difficult_bg,
+                    'В полный рост': opt.full_height,
+                    'Детализация': opt.details,
+                    'Вектор': opt.vector,
+                    'PSD-файл': opt.psd,
+                },
+                'price': str(opt.price),
+                'deadline': opt.deadline
+            }
+
     if request.method == 'POST':
-        form = UserResponseForm(request.POST, instance=response)
+        form = UserResponseForm(request.POST, request.FILES, instance=response)
         if form.is_valid():
-            form.save()
-            return redirect('order_detail', pk=pk)
+            updated = form.save()
+            # Здесь можно логировать изменения в чат
+            return redirect('order_detail', pk=order.pk)
     else:
         form = UserResponseForm(instance=response)
-    return render(request, 'edit_order.html', {'form': form})
 
+    return render(request, 'edit_order.html', {
+        'form': form,
+        'order': order,
+        'package_data_json': mark_safe(json.dumps(package_data)),
+        'extra_options': extra_options,
+        'all_features': ['Черновик', 'Для печати', 'Сложный фон', 'В полный рост', 'Детализация', 'Вектор', 'PSD-файл'],
+    })
 
 @login_required
 def handle_revision(request, pk, action):
@@ -894,3 +1041,55 @@ def resolve_dispute(request, pk, decision):
         )
 
     return redirect('dispute_chat', pk=pk)
+
+@login_required
+def notifications_list(request):
+    notifications = request.user.notifications.all().order_by('-created_at')
+    return render(request, 'notifications.html', {'notifications': notifications})
+
+@login_required
+def favorites_list(request):
+    favorite_commissions = request.user.favorite_commissions.select_related('commission').all()
+    favorite_artists = FavoriteArtist.objects.filter(user=request.user).select_related('artist').order_by('-created_at')
+    return render(request, 'favorites.html', {
+        'favorites': favorite_commissions,
+        'favorite_artists': favorite_artists,
+    })
+
+
+@login_required
+def delete_portfolio(request, portfolio_id):
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
+
+    if portfolio.commission is None:  # Проверяем, не связана ли работа с коммишкой
+        portfolio.delete()
+        messages.success(request, "Работа успешно удалена.")
+    else:
+        messages.error(request, "Нельзя удалить работу, которая привязана к коммишке.")
+
+    return redirect('profile', username=request.user.username)
+
+@login_required
+def delete_commission(request, commission_id):
+    commission = get_object_or_404(Commission, id=commission_id, user=request.user)
+
+    if not commission.responses.exists() and not commission.orders.exists():
+        commission.delete()
+        messages.success(request, "Коммишка успешно удалена.")
+    else:
+        messages.error(request, "Невозможно удалить коммишку — есть активные отклики или заказы.")
+
+    return redirect('profile', username=request.user.username)
+
+
+@login_required
+def delete_bazaar(request, bid_id):
+    bid = get_object_or_404(Birzha, id=bid_id, user=request.user)
+
+    if not bid.responses.exists():
+        bid.delete()
+        messages.success(request, "Объявление успешно удалено.")
+    else:
+        messages.error(request, "Невозможно удалить объявление — есть отклики.")
+
+    return redirect('profile', username=request.user.username)

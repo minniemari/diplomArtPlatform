@@ -114,30 +114,67 @@
             <div class="card-body">
               <h5>Чат</h5>
               <div style="max-height: 400px; overflow-y: auto;">
+
                 {% for message in messages %}
-                  <div class="mb-3">
-                    <strong>{{ message.sender.username }}:</strong>
-                    <p>{{ message.text }}</p>
-                    {% if message.images.exists %}
-                      <div class="d-flex gap-2">
-                        {% for image in message.images.all %}
-                          <img src="{{ image.image.url }}" class="img-thumbnail" style="max-width: 200px;">
-                        {% endfor %}
-                      </div>
-                    {% endif %}
-                  </div>
+                  {% if message.is_order_change %}
+                    <div class="bg-dark-subtle border-start border-4 p-3 mb-2 rounded {% if 'подтвердил' in message.text %}border-success{% elif 'отклонил' in message.text %}border-danger{% else %}border-warning{% endif %}">
+                      <strong class="d-block text-light">{{ message.sender.username }}</strong>
+                      <pre class="mb-1 text-light small">{{ message.text }}</pre>
+                      <div class="text-muted small">{{ message.created_at|date:"d.m.Y H:i" }}</div>
+                    </div>
+                  {% else %}
+                    <div class="mb-3">
+                      <strong>{{ message.sender.username }}:</strong>
+                      <div class="text-muted small">{{ message.created_at|date:"d.m.Y H:i" }}</div>
+                      <p>{{ message.text }}</p>
+                      {% if message.images.exists %}
+                        <div class="d-flex gap-2">
+                          {% for image in message.images.all %}
+                            <img src="{{ image.image.url }}" class="img-thumbnail" style="max-width: 200px;">
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
                 {% empty %}
                   <p>Пока нет сообщений</p>
                 {% endfor %}
+
+                <!-- ПРАВКИ: отображаем один раз, после всех сообщений -->
+                {% for revision in order.revision_requests.all %}
+                  <div class="revision-message">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    <strong>Правки от {{ revision.customer.username }}</strong>
+                    <p class="mb-1">{{ revision.comment }}</p>
+                    <small>{{ revision.created_at|date:"d.m.Y H:i" }}</small>
+                  </div>
+                {% endfor %}
+
+
+                <!-- Кнопки для заказчика -->
+                {% if user == order.customer and order.status == 'discussion' %}
+                  {% with messages|dictsort:"-created_at"|first as last_message %}
+                    {% if last_message.is_order_change %}
+                      <div class="d-flex gap-2 my-3">
+                        <form method="post">
+                          {% csrf_token %}
+                          <button name="confirm_change" class="btn btn-success">Подтвердить изменения</button>
+                          <button name="reject_change" class="btn btn-danger">Отклонить</button>
+                        </form>
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
               </div>
-                <!-- Вывод правок -->
+
+                <!--&lt;!&ndash; Вывод правок &ndash;&gt;
                 {% for revision in order.revision_requests.all %}
                   <div class="alert alert-warning">
                     <strong>Правки от {{ revision.customer.username }}:</strong>
                     <p>{{ revision.comment }}</p>
                     <small>{{ revision.created_at|timesince }} назад</small>
                   </div>
-                {% endfor %}
+                {% endfor %}-->
               <!-- Форма отправки сообщения -->
               <form method="post" action="{% url 'send_message' order.id %}" class="mt-3">
                 {% csrf_token %}
@@ -291,99 +328,101 @@
   {% endif %}
 </div>
 
-<!-- Модальные окна -->
-<!-- Модальное окно сдачи заказа -->
-<div class="modal fade" id="submitDeliveryModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="post" enctype="multipart/form-data" action="{% url 'submit_delivery' order.id %}">
-        {% csrf_token %}
-        <div class="modal-header">
-          <h5 class="modal-title">Сдать заказ</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Файлы работы</label>
-            <input type="file" name="images" multiple class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Комментарий</label>
-            <textarea name="comment" class="form-control" rows="3" required></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Отправить</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Модальное окно запроса правок -->
-<div class="modal fade" id="requestRevisionsModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="post" action="{% url 'request_revisions' order.id %}">
-        {% csrf_token %}
-        <div class="modal-header">
-          <h5 class="modal-title">Запросить правки</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Описание правок</label>
-            <textarea name="comment" class="form-control" rows="3" required></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-warning">Отправить</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+{% if order %}
+  <!-- Модальные окна -->
+  <!-- Модальное окно сдачи заказа -->
+  <div class="modal fade" id="submitDeliveryModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
-        <form method="post" action="{% url 'cancel_order' order.id %}">
+        <form method="post" enctype="multipart/form-data" action="{% url 'submit_delivery' order.id %}">
           {% csrf_token %}
           <div class="modal-header">
-            <h5 class="modal-title">Подтверждение отмены</h5>
+            <h5 class="modal-title">Сдать заказ</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <p>Вы уверены, что хотите отменить заказ?</p>
-            <select name="reason" class="form-select" required>
-              <option value="style">Не устраивает стиль</option>
-              <option value="tz">Не соблюдено ТЗ</option>
-              <option value="other">Другое</option>
-            </select>
-            <div id="otherReasonField" style="display: none;">
-              <label>Уточнение:</label>
-              <textarea name="other_reason" class="form-control" rows="3"></textarea>
+            <div class="mb-3">
+              <label class="form-label">Файлы работы</label>
+              <input type="file" name="images" multiple class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Комментарий</label>
+              <textarea name="comment" class="form-control" rows="3" required></textarea>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button type="submit" class="btn btn-danger">Подтвердить</button>
+            <button type="submit" class="btn btn-primary">Отправить</button>
           </div>
         </form>
       </div>
     </div>
-</div>
+  </div>
 
- <!-- Модальное окно для просмотра изображений -->
-  <div class="modal fade" id="viewImageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+  <!-- Модальное окно запроса правок -->
+  <div class="modal fade" id="requestRevisionsModal" tabindex="-1">
+    <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-body text-center">
-          <img id="modalImage" src="" class="img-fluid" alt="Работа художника">
-        </div>
+        <form method="post" action="{% url 'request_revisions' order.id %}">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title">Запросить правки</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Описание правок</label>
+              <textarea name="comment" class="form-control" rows="3" required></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-warning">Отправить</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="cancelOrderModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="post" action="{% url 'cancel_order' order.id %}">
+            {% csrf_token %}
+            <div class="modal-header">
+              <h5 class="modal-title">Подтверждение отмены</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p>Вы уверены, что хотите отменить заказ?</p>
+              <select name="reason" class="form-select" required>
+                <option value="style">Не устраивает стиль</option>
+                <option value="tz">Не соблюдено ТЗ</option>
+                <option value="other">Другое</option>
+              </select>
+              <div id="otherReasonField" style="display: none;">
+                <label>Уточнение:</label>
+                <textarea name="other_reason" class="form-control" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+              <button type="submit" class="btn btn-danger">Подтвердить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+  </div>
+
+   <!-- Модальное окно для просмотра изображений -->
+    <div class="modal fade" id="viewImageModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <img id="modalImage" src="" class="img-fluid" alt="Работа художника">
+          </div>
+        </div>
+      </div>
+    </div>
+{% endif %}
 
 <!-- Стили -->
 <style>

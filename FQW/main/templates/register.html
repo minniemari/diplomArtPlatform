@@ -1,49 +1,52 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block extra_css %}
-    <!-- Подключение Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/register.css' %}">
-{% endblock %}
-
 {% block title %} Регистрация {% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
+            <div class="card bg-dark text-light shadow-sm">
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">Регистрация</h2>
+
                     <form method="post">
                         {% csrf_token %}
+
+                        <!-- Имя пользователя -->
                         <div class="mb-3">
                             <label for="{{ form.username.id_for_label }}" class="form-label">Имя пользователя</label>
                             {{ form.username }}
                         </div>
+
+                        <!-- Email -->
                         <div class="mb-3">
                             <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
                             {{ form.email }}
                         </div>
+
+                        <!-- Пароль -->
                         <div class="mb-3">
                             <label for="{{ form.password1.id_for_label }}" class="form-label">Пароль</label>
                             {{ form.password1 }}
                         </div>
+
+                        <!-- Подтверждение пароля -->
                         <div class="mb-3">
-                            <label for="{{ form.password2.id_for_label }}" class="form-label">Подтверждение пароля</label>
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">Подтвердите пароль</label>
                             {{ form.password2 }}
                         </div>
-<!--                        <div class="mb-3">-->
-<!--                            <label for="{{ form.specialization.id_for_label }}" class="form-label">Специализация</label>-->
-<!--                            {{ form.specialization }}-->
-<!--                        </div>-->
-<!--                        <div class="mb-3">-->
-<!--                            <label for="{{ form.description.id_for_label }}" class="form-label">Описание профиля</label>-->
-<!--                            {{ form.description }}-->
-<!--                        </div>-->
-                        <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+
+                        <!-- Кнопка отправки -->
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Зарегистрироваться</button>
                     </form>
+
+                    <!-- Ссылка на вход -->
                     <div class="text-center mt-3">
                         <a href="{% url 'login' %}" class="text-decoration-none">Уже есть аккаунт? Войти</a>
                     </div>
@@ -52,4 +55,29 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Плавное появление карточек
+    const elements = document.querySelectorAll(".fade-in");
+    elements.forEach(el => {
+        el.classList.add("fade-in", "loaded");
+    });
+
+    // Глазок для паролей
+    document.querySelectorAll(".toggle-password").forEach(btn => {
+        btn.addEventListener("click", function () {
+            const input = this.previousElementSibling;
+            if (input.type === "password") {
+                input.type = "text";
+                this.textContent = "👁️‍🗨️";
+            } else {
+                input.type = "password";
+                this.textContent = "👁️";
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

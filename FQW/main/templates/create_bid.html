@@ -2,51 +2,140 @@
 {% load static %}
 
 {% block extra_css %}
-    <!-- Подключение дополнительных стилей -->
     <link rel="stylesheet" href="{% static 'css/CreateBid.css' %}">
 {% endblock %}
 
-{% block title %} Создание заказа на бирже {% endblock %}
+{% block title %}Создание объявления на бирже{% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <h2 class="text-center mb-4">Создание заказа на бирже</h2>
+<div class="container mt-5">
+    <h2 class="text-center mb-4 text-light">Создание заказа на биржу</h2>
+    <div class="card p-4 shadow-sm bg-dark">
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="card p-4 mb-3">
-                <div class="mb-3">
-                    <label for="{{ form.title.id_for_label }}" class="form-label">Название задачи</label>
-                    {{ form.title }}
-                </div>
-                <div class="mb-3">
-                    <label for="{{ form.description.id_for_label }}" class="form-label">Детальное описание задачи</label>
-                    <small class="text-muted">Опишите, что именно вам нужно, в каком объеме и за какой срок</small>
-                    {{ form.description }}
-                </div>
-                <div class="mb-3">
-                    <label for="{{ form.file.id_for_label }}" class="form-label">Прикрепить файлы</label>
-                    <small class="text-muted">до 10 файлов не более 100 МБ</small>
-                    {{ form.file }}
-                </div>
-                <div class="row align-items-center mb-3">
-                    <div class="col-md-6">
-                        <label for="{{ form.type.id_for_label }}" class="form-label">Тип</label>
-                        {{ form.type }}
-                    </div>
-                    <div class="col-md-6">
-                        <label for="{{ form.price.id_for_label }}" class="form-label">Бюджет</label>
-                        <div class="input-group">
-                            <span class="input-group-text">₽</span>
-                            {{ form.price }}
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="{{ form.increasedPrice.id_for_label }}" name="{{ form.increasedPrice.html_name }}">
-                    <label class="form-check-label" for="{{ form.increasedPrice.id_for_label }}">Готов рассмотреть предложения с ценой выше, если уровень исполнителя будет выше</label>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Разместить</button>
+
+           <!-- Название задачи -->
+            <div class="mb-3">
+                <label for="{{ form.title.id_for_label }}" class="form-label">Название задачи</label>
+                <input type="text"
+                       name="{{ form.title.name }}"
+                       id="{{ form.title.id_for_label }}"
+                       value="{{ form.title.value|default_if_none:'' }}"
+                       class="form-control"
+                       placeholder="Введите название задачи">
             </div>
+
+            <!-- Описание задачи -->
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Описание задачи</label>
+                <small class="text-muted d-block mb-1">Опишите, что именно вам нужно</small>
+                <textarea name="{{ form.description.name }}"
+                          id="{{ form.description.id_for_label }}"
+                          class="form-control"
+                          rows="4">{{ form.description.value|default_if_none:'' }}</textarea>
+            </div>
+
+            <!-- Поле с файлами -->
+            <div class="mb-3">
+                <label for="{{ form.files.id_for_label }}" class="form-label">Прикрепить файлы</label>
+                <small class="text-muted d-block mb-1">Максимум 10 файлов, до 100 МБ</small>
+                <input type="file"
+                       name="files"
+                       multiple
+                       class="form-control"
+                       accept="image/*,.pdf,.psd,.zip">
+                <ul id="file-list" class="mt-2 list-unstyled"></ul>
+            </div>
+
+            <!-- Тип проекта -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.type.id_for_label }}" class="form-label">Тип проекта</label>
+                    <select id="{{ form.type.id_for_label }}"
+                            name="{{ form.type.name }}"
+                            class="form-select">
+                        {% for option in form.type %}
+                            {{ option }}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.price.id_for_label }}" class="form-label">Бюджет</label>
+                    <div class="input-group">
+                        <input type="number"
+                               name="{{ form.price.name }}"
+                               id="{{ form.price.id_for_label }}"
+                               value="{{ form.price.value|default_if_none:'' }}"
+                               class="form-control"
+                               min="1"
+                               placeholder="Например: 5000">
+                        <span class="input-group-text">₽</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Чекбокс -->
+            <div class="mb-3 form-check">
+                <input type="checkbox"
+                       id="{{ form.increasedPrice.id_for_label }}"
+                       name="{{ form.increasedPrice.html_name }}"
+                       class="form-check-input">
+                <label for="{{ form.increasedPrice.id_for_label }}" class="form-check-label">
+                    Готов рассмотреть предложения с большей стоимостью
+                </label>
+            </div>
+
+            <!-- Кнопка отправки -->
+            <button type="submit" class="btn btn-primary w-100 mt-3">
+                Разместить объявление
+            </button>
         </form>
     </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.querySelector('input[type="file"][name="files"]');
+    const fileList = document.getElementById("file-list");
+
+    if (!fileInput || !fileList) return;
+
+    fileInput.addEventListener("change", function () {
+        fileList.innerHTML = ""; // Очистка предыдущих файлов
+        const files = fileInput.files;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            // Проверка размера файла
+            if (file.size > 100 * 1024 * 1024) {
+                alert(`Файл "${file.name}" превышает 100 МБ`);
+                continue;
+            }
+
+            // Создаём элементы
+            const li = document.createElement("li");
+            li.classList.add("d-flex", "justify-content-between", "align-items-center", "bg-secondary", "p-2", "rounded", "mb-2");
+            li.style.backgroundColor = "#24252A";
+            li.style.color = "#CDC7B7";
+
+            const span = document.createElement("span");
+            span.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} МБ)`;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.classList.add("btn-close", "btn-close-white", "ms-2");
+            btn.setAttribute("aria-label", "Close");
+            btn.onclick = () => {
+                span.style.textDecoration = "line-through";
+                setTimeout(() => span.parentElement.remove(), 300);
+            };
+
+            li.appendChild(span);
+            li.appendChild(btn);
+            fileList.appendChild(li);
+        }
+    });
+});
+</script>
 {% endblock %}

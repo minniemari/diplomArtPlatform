@@ -13,6 +13,7 @@
     <div class="container mt-5">
         <h2 class="text-center mb-4">Каталог коммишек</h2>
 
+
         <!-- Форма фильтров -->
         <form method="get" class="row g-3 mb-4">
             <div class="col-md-3">
@@ -37,15 +38,23 @@
             <div class="col-md-3 align-self-end">
                 <button type="submit" class="btn btn-primary w-100">Применить фильтры</button>
             </div>
-             <div class="col-md-3 align-self-end">
-                <label for="sortFilter" class="form-label">Сортировать по:</label>
-                <select id="sortFilter" name="sort" class="form-select">
-                    <option value="created_at_desc" {% if current_sort == 'created_at_desc' %}selected{% endif %}>Новые коммишки</option>
-                    <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Цена (по возрастанию)</option>
-                    <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Цена (по убыванию)</option>
-                    <option value="type_asc" {% if current_sort == 'type_asc' %}selected{% endif %}>Тип (по алфавиту)</option>
-                    <option value="type_desc" {% if current_sort == 'type_desc' %}selected{% endif %}>Тип (по алфавиту, обратно)</option>
-                </select>
+             <div class="d-flex align-items-center mb-4">
+                <div class="me-3">
+                    <label for="sortFilter" class="form-label">Сортировать по:</label>
+                    <select id="sortFilter" name="sort" class="form-select sort-selector">
+                        <option value="created_at_desc" {% if current_sort == 'created_at_desc' %}selected{% endif %}>Новые коммишки</option>
+                        <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Цена (по возрастанию)</option>
+                        <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Цена (по убыванию)</option>
+                        <option value="type_asc" {% if current_sort == 'type_asc' %}selected{% endif %}>Тип (А → Я)</option>
+                        <option value="type_desc" {% if current_sort == 'type_desc' %}selected{% endif %}>Тип (Я → А)</option>
+                    </select>
+                </div>
+
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'create_commission' %}" class="btn btn-create-commission d-flex align-items-center gap-2">
+                        <i class="bi bi-plus-lg me-1"></i> Создать коммишку
+                    </a>
+                {% endif %}
             </div>
         </form>
 

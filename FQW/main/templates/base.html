@@ -58,6 +58,16 @@
                             </ul>
                         </li>
                     {% endif %}
+                    <li class="nav-item me-2">
+                      <a class="btn btn-outline-light" href="{% url 'favorites_list' %}">
+                        <i class="bi bi-heart-fill"></i> Избранное
+                      </a>
+                    </li>
+                    <li class="nav-item me-2">
+                      <a class="btn btn-outline-light" href="#">
+                        <i class="bi bi-chat-left-dots"></i> Мои чаты
+                      </a>
+                    </li>
                     <!-- Кнопка "Каталог коммишек" -->
                     <li class="nav-item me-2">
                         <a class="btn btn-outline-light" href="{% url 'commissions_catalog' %}">

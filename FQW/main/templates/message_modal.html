@@ -1,23 +1,68 @@
-<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="messageModalLabel">Сообщение</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="d-flex align-items-center mb-3">
-                    <img src="{{ user.profile.image.url }}" alt="{{ user.username }}" class="rounded-circle me-2" width="40">
-                    <div>
-                        <p class="mb-0">{{ user.username }}</p>
-                    </div>
-                </div>
-                <textarea class="form-control" id="messageText" rows="5" placeholder="Задайте вопрос"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary" id="sendMessageButton">Отправить сообщение</button>
-            </div>
-        </div>
+<!-- templates/partials/_message_modal.html -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Новое сообщение</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="initialMessageText" rows="4" class="form-control" placeholder="Введите первое сообщение..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary" onclick="sendMessage()">Отправить</button>
+      </div>
     </div>
+  </div>
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    let recipientId = '';
+    const modal = document.getElementById('messageModal');
+
+    if (modal) {
+      modal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        recipientId = button.getAttribute('data-recipient');
+      });
+    }
+
+    window.sendMessage = async function () {
+      const contentInput = document.getElementById('initialMessageText');
+      if (!contentInput) {
+        alert('Поле для сообщения не найдено.');
+        return;
+      }
+
+      const content = contentInput.value.trim();
+      if (!content) {
+        alert('Введите текст сообщения');
+        return;
+      }
+
+      try {
+        const response = await fetch('/send-personal-message/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ chat_id: recipientId, message: content }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          $('#messageModal').modal('hide');
+          window.location.href = `/chat/${result.chat_id}/`;
+        } else {
+          alert('Ошибка при создании чата.');
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла сетевая ошибка.');
+      }
+    };
+  });
+</script>

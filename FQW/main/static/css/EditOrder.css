@@ -1,0 +1,51 @@
+.edit-order-form {
+    background-color: #1c1a26;
+    color: #EDE9DC;
+    padding: 2rem;
+    border-radius: 1rem;
+    max-width: 700px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.edit-order-form label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    display: block;
+    color: #CDC7B7;
+}
+
+.edit-order-form input,
+.edit-order-form textarea,
+.edit-order-form select {
+    background-color: #2b2837;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.edit-order-form .form-check {
+    margin-bottom: 0.75rem;
+}
+
+.edit-order-form .form-check-label {
+    color: #EDE9DC;
+}
+
+.edit-order-form button {
+    background-color: #748BBB;
+    border: none;
+    color: #10111F;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.edit-order-form button:hover {
+    background-color: #82779F;
+    color: #fff;
+}

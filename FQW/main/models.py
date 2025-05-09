@@ -177,7 +177,7 @@ class Birzha(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField()
-    file = models.FileField(upload_to='bids/', blank=True, null=True)
+    files = models.ManyToManyField('File', blank=True)
     type = models.ForeignKey('Type', on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     increasedPrice = models.BooleanField(default=False)
@@ -309,6 +309,7 @@ class Message(models.Model):
     text = models.TextField()
     images = models.ManyToManyField('ImageStorage', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_order_change = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Сообщение от #{self.sender.username}"
@@ -416,3 +417,35 @@ class RevisionRequest(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+# Сообщения
+class PersonalMessage(models.Model):
+    chat = models.ForeignKey('Chat', on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    image = models.ImageField(upload_to='personal_messages/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Сообщение от {self.sender}"
+
+# Чат
+class PersonalChat(models.Model):
+    artist = models.ForeignKey(User, on_delete=models.CASCADE, related_name='personal_chats_as_artist')
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='personal_chats_as_customer')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Чат между {self.customer} и {self.artist}"
+
+    @classmethod
+    def get_or_create_chat(cls, artist, customer):
+        # Проверяем, есть ли уже чат между ними
+        chat = cls.objects.filter(
+            models.Q(artist=artist, customer=customer) |
+            models.Q(artist=customer, customer=artist)
+        ).first()
+
+        if not chat:
+            chat = cls.objects.create(artist=artist, customer=customer)
+        return chat

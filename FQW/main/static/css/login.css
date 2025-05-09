@@ -1,54 +1,63 @@
-/* Стилизация текстовых полей и пароля по типу input */
-form input[type="text"],
-form input[type="password"] {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    background-color: #2B2B3F;
-    color: #EDE9DC;
-    border: 1px solid #444;
-    font-size: 1rem;
-    transition: border-color 0.2s ease;
+/* register.css */
+
+.card {
+    background-color: #10111F;
+    border-radius: 1rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
-form input[type="text"]:focus,
-form input[type="password"]:focus {
+.card-body {
+    padding: 2rem;
+}
+
+.card-title {
+    color: #CDC7B7;
+    font-weight: bold;
+}
+
+.form-label {
+    color: #CDC7B7;
+    font-weight: 500;
+}
+
+.form-control {
+    background-color: #24252A;
+    color: #CDC7B7;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+}
+
+
+.form-control::placeholder {
+    color: #999;
+}
+
+.form-control:focus {
+    color: #999;
+    background-color: #2E303E;
+    box-shadow: 0 0 0 0.2rem rgba(116, 139, 187, 0.2);
     border-color: #748BBB;
-    background-color: #2B2B3F;
-    color: #fff;
-    outline: none;
-    box-shadow: none;
 }
 
-/* Стили кнопки без изменения шаблона */
-form button[type="submit"] {
+.btn-primary {
     background-color: #748BBB;
     color: #10111F;
+    font-weight: bold;
     border: none;
-    border-radius: 0.5rem;
-    padding: 0.6rem;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
 }
 
-form button[type="submit"]:hover {
+.btn-primary:hover {
     background-color: #82779F;
-    color: #fff;
+    transform: scale(1.02);
 }
 
-/* Стили подписей к полям */
-form label {
-    color: #5C556C;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-    display: block;
+.text-decoration-none {
+    color: #748BBB;
 }
-.card-title{
-    color: #5C556C;
-}
-.card-body{
-    background-color: #CDC7B;
-}
-.text-center mt-3{
-    color: #5C556C;
+
+.text-decoration-none:hover {
+    color: #CDC7B7;
 }

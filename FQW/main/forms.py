@@ -1,19 +1,30 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from .models import *
 from django.forms import modelformset_factory
+from .widgets import MultipleFileInput
 
 
 class RegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    # specialization = forms.CharField(max_length=255, required=False)
-    # description = forms.CharField(widget=forms.Textarea, required=False)
+    email = forms.EmailField()
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ["username", "email", "password1", "password2"]
 
+    def __init__(self, *args, **kwargs):
+        super(RegisterForm, self).__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+
+
+class LoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super(LoginForm, self).__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+            field.widget.attrs['placeholder'] = field.label
 
 class CommissionForm(forms.ModelForm):
     class Meta:
@@ -79,15 +90,27 @@ class PortfolioForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['description'].required = False
 
+
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
 class BirzhaForm(forms.ModelForm):
+    files = forms.FileField(
+        widget=MultipleFileInput(),  # ✅ Используем наш виджет
+        required=False,
+        label="Прикрепить файлы",
+        help_text="Можно загрузить до 10 файлов, до 100 МБ"
+    )
+
     class Meta:
         model = Birzha
-        fields = ['title', 'description', 'file', 'type', 'price', 'increasedPrice']
+        fields = ['title', 'description', 'type', 'price', 'increasedPrice', 'files']
 
 class UserResponseForm(forms.ModelForm):
     class Meta:
         model = UserResponse
         fields = [
+            'package_type',
             'technical_task',  # Техническое задание
             'files',           # Прикрепленные файлы
             'description',     # Описание (обязательно для биржи)
@@ -97,9 +120,9 @@ class UserResponseForm(forms.ModelForm):
         ]
         widgets = {
             'technical_task': forms.Textarea(attrs={'rows': 4}),
-            'description': forms.Textarea(attrs={'rows': 4}),
-            'price': forms.NumberInput(attrs={'min': 1}),
-            'delivery_time': forms.NumberInput(attrs={'min': 1}),
+            'description': forms.Textarea(attrs={'rows': 4,'id': 'id_description'}),
+            'price': forms.NumberInput(attrs={'min': 1,'id': 'id_price'}),
+            'delivery_time': forms.NumberInput(attrs={'min': 1, 'id': 'delivery_time'}),
             'birzha': forms.HiddenInput(),
         }
 
@@ -122,15 +145,14 @@ class UserResponseForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['specialization', 'description', 'image', 'skills']
+        fields = ['specialization', 'description', 'skills']
         widgets = {
-            'skills': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'skills': forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, *args, **kwargs):
         super(ProfileForm, self).__init__(*args, **kwargs)
-        # Убедитесь, что поле skills заполнено
-        self.fields['skills'].queryset = Skills.objects.all()
+        print("Skills queryset:", self.fields['skills'].queryset)  # Отладка
 
 class ReviewForm(forms.ModelForm):
     class Meta:
@@ -144,3 +166,4 @@ class CancelOrderForm(forms.Form):
         ('other', 'Другое'),
     ])
     other_reason = forms.CharField(required=False)
+

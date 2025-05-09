@@ -23,6 +23,7 @@ urlpatterns = [
     path('commission/<int:pk>/order/', views.order_form, name='order_form'),
     path('commission_success/',views.commission_success, name='commission_success'),
     path('toggle-favorite-commission/<int:commission_id>/', views.toggle_favorite_commission, name='toggle_favorite_commission'),
+    path('toggle-favorite-artist/<int:artist_id>/', views.toggle_favorite_artist, name='toggle_favorite_artist'),
     path('add-portfolio/', add_portfolio, name='add_portfolio'),
     path('edit-profile/', edit_profile, name='edit_profile'),
     path('my-orders/', views.my_orders, name='my_orders'),
@@ -40,7 +41,12 @@ urlpatterns = [
     path('profile/<str:username>/', profile_detail, name='profile_detail'),
     path('handle_revision/<int:pk>/<str:action>/', handle_revision, name='handle_revision'),
     path('dispute/<int:pk>/<str:decision>/', resolve_dispute, name='resolve_dispute'),
-    path('dispute/<int:pk>/', views.dispute_chat, name='dispute_chat')
+    path('dispute/<int:pk>/', views.dispute_chat, name='dispute_chat'),
+    path('allNotifications',views.notifications_list, name='notifications_list'),
+    path('allFavorites',views.favorites_list, name='favorites_list'),
+    path('commission/delete/<int:commission_id>/', delete_commission, name='delete_commission'),
+    path('bazaar/delete/<int:bid_id>/', delete_bazaar, name='delete_bazaar'),
+    path('portfolio/delete/<int:portfolio_id>/', delete_portfolio, name='delete_portfolio'),
 ]
 
 if settings.DEBUG:

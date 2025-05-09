@@ -107,46 +107,50 @@
 }
 
 .btn-primary {
-    background-color: #748BBB;
-    border-color: #748BBB;
-    color: #10111F;
+    background-color: #748BBB !important;
+    border-color: #ffffff !important;
+    color: #10111F !important;
 }
 .btn-primary:hover {
-    background-color: #82779F;
-    color: #fff;
+    background-color: #82779F !important;
+    color: #fff !important;
 }
 
 .btn-secondary {
-    background-color: #82779F;
-    border-color: #82779F;
+    margin-top: 10px;
+    background-color: #82779F !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
 }
 .btn-secondary:hover {
-    background-color: #748BBB;
+    background-color: #748BBB !important;
 }
 
 .btn-success {
-    background-color: #748BBB;
-    border-color: #748BBB;
+    background-color: #748BBB !important;
+    border-color: #748BBB !important;
 }
 .btn-success:hover {
-    background-color: #82779F;
+    background-color: #82779F !important;
 }
 
 .btn-danger {
-    background-color: #CD5C5C;
-    border-color: #CD5C5C;
+    margin-top: 10px;
+    background-color: #CD5C5C !important;
+    color: #030E17 !important;
+    border-color: #030E17 !important;
 }
 .btn-danger:hover {
-    background-color: #B22222;
+    background-color: #B22222 !important;
 }
 
 .btn-warning {
-    background-color: #FFD700;
-    border-color: #FFD700;
-    color: #10111F;
+    background-color: #FFD700 !important;
+    border-color: #FFD700 !important;
+    color: #10111F !important;
 }
 .btn-warning:hover {
-    background-color: #FFC107;
+    background-color: #FFC107 !important;
 }
 
 /* === Чат === */
@@ -167,12 +171,32 @@
     margin-bottom: 0.25rem;
 }
 
-/* === Правки (revisions) === */
+/* === Правки (revisions) ===
 .alert-warning {
     background-color: #5C556C;
     color: #EDE9DC;
     border-left: 4px solid #FFD700;
+}*/
+
+.revision-message {
+    background-color: #82779F;
+    border-left: 4px solid #FFD369;
+    color: #F9F9F9;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+
+.revision-message strong {
+    color: #fff;
+    font-weight: 600;
+}
+
+.revision-message small {
+    color: #ddd;
+}
+
 
 /* === Изображение в модальном окне === */
 #modalImage {

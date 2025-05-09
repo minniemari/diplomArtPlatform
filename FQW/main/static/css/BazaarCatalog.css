@@ -89,3 +89,25 @@ input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
+
+/* Кнопка "Опубликовать проект на бирже" */
+.btn-secondary {
+    background-color: transparent;
+    color: #CDC7B7;
+    border: 2px solid #748BBB;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #748BBB;
+    color: #10111F;
+    border-color: #748BBB;
+    transform: scale(1.05);
+}
+
+.btn-secondary i {
+    font-size: 1.2rem;
+}
