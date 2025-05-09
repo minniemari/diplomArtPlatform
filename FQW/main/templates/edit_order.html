@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Изменить заказ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/EditOrder.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="text-center mb-4">Изменить заказ</h2>
+
+  <form method="post" class="edit-order-form">
+    {% csrf_token %}
+    {% if response.commission %}
+      <div class="mb-3">
+        <label for="id_package_type">Тип пакета</label>
+        {{ form.package_type }}
+      </div>
+    {% endif %}
+    <div class="mb-3">
+      <label for="id_package_type">Тип пакета</label>
+      {{ form.package_type }}
+    </div>
+    <div id="package-details" class="mb-4 p-3 rounded" style="background-color: #2B2B3F; color: #EDE9DC;"></div>
+    <div id="package-description" class="text-muted mb-3" style="font-size: 0.9rem;"></div>
+
+    <div class="mb-3">
+      <label for="id_technical_task">Техническое задание</label>
+      {{ form.technical_task }}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_description">Описание</label>
+      {{ form.description }}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_price">Цена</label>
+      {{ form.price }}
+    </div>
+
+    <div class="mb-3">
+      <label for="id_delivery_time">Срок выполнения (в днях)</label>
+      {{ form.delivery_time }}
+    </div>
+
+    {% if extra_options %}
+    <div class="mb-4">
+      <label>Дополнительные опции:</label>
+      {% for option in extra_options %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="extras" value="{{ option.id }}" id="opt{{ option.id }}">
+          <label class="form-check-label" for="opt{{ option.id }}">
+            {{ option.title }} — +{{ option.price }} ₽
+          </label>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="text-center">
+      <button type="submit" class="btn">Сохранить изменения</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const packageData = {{ package_data_json|safe }};
+    const select = document.getElementById('id_package_type');
+    const descInput = document.getElementById('id_description');
+    const priceInput = document.getElementById('id_price');
+    const timeInput = document.getElementById('id_delivery_time');
+    const detailBlock = document.getElementById('package-details');
+
+    if (!select || !descInput || !priceInput || !timeInput || !detailBlock) {
+      console.error("Не найдены элементы формы. Проверь IDs или порядок подключения JS.");
+      return;
+    }
+
+    function updatePackageData() {
+      const selected = select.value;
+      const data = packageData[selected];
+      if (!data) return;
+
+      descInput.value = data.description;
+      priceInput.value = data.price;
+      timeInput.value = data.deadline;
+
+      let html = `<p><strong>Описание:</strong> ${data.description}</p>`;
+      html += `<p><strong>Цена:</strong> ${data.price} ₽</p>`;
+      html += `<p><strong>Срок:</strong> ${data.deadline} дней</p>`;
+      html += `<p><strong>Включено:</strong></p><ul>`;
+      for (const [label, enabled] of Object.entries(data.features)) {
+        if (enabled) {
+          html += `<li>✔️ ${label}</li>`;
+        }
+      }
+      html += `</ul>`;
+      detailBlock.innerHTML = html;
+    }
+
+    updatePackageData();
+    select.addEventListener('change', updatePackageData);
+  });
+</script>
+
+{% endblock %}

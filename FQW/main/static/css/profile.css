@@ -1,0 +1,531 @@
+/* === Анимация появления элементов === */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.fade-in.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* === Стили для аватарки === */
+.profile-avatar {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #748BBB;
+    box-shadow: 0 4px 15px rgba(116, 139, 187, 0.4);
+    transition: transform 0.3s ease;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.05);
+}
+
+/* === Красивое модальное окно === */
+.modal-dialog {
+    max-width: 600px;
+    transition: transform 0.3s ease;
+}
+
+.modal.fade .modal-dialog {
+    transform: scale(0.95);
+    opacity: 0;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal-content {
+    background-color: #5C556C;
+    border-radius: 1rem;
+    border: none;
+    color: #CDC7B7;
+}
+
+.modal-header {
+    background-color: #748BBB;
+    color: #10111F;
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: none;
+    padding: 1rem;
+}
+
+.btn-modal-close {
+    color: #10111F;
+    opacity: 0.8;
+}
+
+.btn-modal-close:hover {
+    opacity: 1;
+}
+
+/* === Карточки коммишек === */
+.card-img-top {
+    height: 180px;
+    object-fit: cover;
+    border-bottom: 1px solid #444;
+}
+
+.card {
+    background-color: #5C556C;
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card-title {
+    font-size: 1.25rem;
+    color: #CDC7B7;
+}
+
+.card-text {
+    color: #EDE9DC;
+}
+
+/* Рейтинг */
+.text-muted {
+  font-size: 0.9rem; /* Маленький шрифт */
+  color: #cedaf1 !important;
+}
+
+.bi-star-fill {
+  font-size: 1rem; /* Размер звёздочки */
+  color: #b2a6cf !important;
+}
+}
+
+/* === Кнопки === */
+.btn-light:hover {
+    background-color: #82779F;
+    color: white;
+}
+
+.btn-primary {
+    background-color: #748BBB;
+    border: none;
+    color: #10111F !important;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #82779F !important;
+    transform: scale(1.02);
+}
+
+.btn-success {
+    background-color: #748BBB;
+    border: none;
+    color: #10111F !important;
+    transition: background-color 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #82779F !important;
+}
+
+/* Контейнер действий */
+.profile-actions-container {
+  background-color: var(--bg-secondary); /* Тёмно-серый фон */
+  padding: 15px;
+  border-radius: 8px;
+   border: 1px solid #748BBB; /* Светлая граница */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+/* Аватаpка */
+.profile-actions-container .profile-avatar {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1.5px solid #748BBB;
+  box-shadow: 0 4px 15px rgba(116, 139, 187, 0.4);
+  transition: transform 0.3s ease;
+}
+/* Кнопка "Связаться со мной" */
+.btn-connect {
+  background-image: linear-gradient(to right, #748BBB, #82779F); /* Градиент */
+  color: #10111F; /* Тёмный текст */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.btn-connect:hover {
+  background-image: linear-gradient(to right, #667EC6, #706D9E); /* Темнее при наведении */
+}
+
+/* Стили для кнопки "Избранное" */
+.favorite-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+/* Стиль кнопки "Избранное" */
+.btn-favorite {
+  width: 48px;
+  height: 48px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  margin-top: 10px;
+}
+
+.btn-favorite  {
+  color: transparent; /* Цвет текста из палитры */
+}
+
+/* Иконка сердца */
+.btn-favorite i {
+  font-size: 1.6rem;
+  color: #CDC7B7; /* Цвет текста из палитры */
+  transition: all 0.3s ease;
+}
+
+/* При наведении */
+.btn-favorite:hover {
+  transform: scale(1.1);
+}
+
+/* Нажатие кнопки */
+.btn-favorite:active {
+  transform: scale(0.95);
+}
+.btn-favorite.active i {
+  color: #748BBB; /* Новый цвет из вашей палитры */
+}
+
+/* Фокус для доступности */
+.btn-favorite:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(116, 139, 187, 0.5);
+}
+
+/* Активный режим — когда художник в избранном */
+.btn-favorite.active i {
+  color: #748bbb; /* Яркий красный цвет для заполненного сердца */
+  animation: heartbeat 0.6s ease-in-out;
+}
+
+/* Анимация сердцебиения */
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* === Навыки === */
+.badge.bg-secondary {
+    background-color: #748BBB !important;
+    color: #232323 !important;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Стили для отзывов */
+.reviews {
+  margin-bottom: 1rem;
+}
+
+.review-item {
+  margin-bottom: 0.5rem;
+}
+
+.rating-stars {
+  font-size: 1.2rem;
+  color: #FFD700; /* Золотой цвет для звёзд */
+}
+
+.rating-stars .bi-star-fill {
+  color: #FFD700;
+}
+
+.rating-stars .bi-star-outline {
+  color: #CDC7B7;
+}
+
+.btn-add-work {
+  background-color: transparent;
+  border: 2px dashed #748BBB; /* Пунктирная граница */
+  color: #CDC7B7; /* Бежевый текст */
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-add-work:hover {
+  background-color: rgba(116, 139, 187, 0.2); /* Легкий фон при наведении */
+  transform: scale(1.02);
+}
+
+/* Модальное окно */
+.modal-content.bg-dark {
+  background-color: #10111F;
+  color: #CDC7B7;
+}
+
+.modal-header.bg-secondary {
+  background-color: #5C556C;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body .row {
+  align-items: center;
+}
+
+.modal-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+
+.card {
+  background-color: #10111F;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-img-top {
+  height: 180px;
+  object-fit: cover;
+}
+/* Горизонтальный скролл */
+.horizontal-scroll-container {
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 10px 0;
+}
+
+.horizontal-scroll {
+  display: flex;
+  gap: 15px;
+}
+
+/* Стили для полосы прокрутки */
+::-webkit-scrollbar {
+  height: 8px !important; /* Ширина полосы прокрутки */
+  background-color: #343a40 !important; /* Цвет фона полосы прокрутки */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #748BBB !important; /* Цвет активной области прокрутки */
+  border-radius: 8px !important;
+  transition: background-color 0.3s ease !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #82779F !important; /* Цвет активной области при наведении */
+}
+
+::-webkit-scrollbar-track {
+  background-color: #343a40 !important; /* Цвет трека прокрутки */
+}
+
+.scroll-card {
+  min-width: 410px;
+  min-height:350px;
+  background-color: #10111F;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.scroll-card:hover {
+  transform: scale(1.02);
+}
+
+.scroll-card-birzha {
+  min-width: 410px;
+  min-height: 100px;
+  background-color: #10111F;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.scroll-card-birzha:hover {
+  transform: scale(1.02);
+}
+.card-img-top {
+  height: 250px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* Стили для кнопки удаления */
+.delete-button {
+  background-color: #CD5C5C !important; /* Красный фон */
+  color: #000000;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  padding: 8px 16px;
+}
+
+.delete-button:hover {
+  background-color: #C82333; /* Темнее при наведении */
+  transform: scale(1.1);
+}
+
+.delete-button:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.5); /* Акцент при фокусе */
+}
+/* Кнопки управления */
+.prev-button, .next-button {
+  background-color: #748BBB;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.prev-button:hover, .next-button:hover {
+  background-color: #667EC6;
+}
+
+/* === Модальное окно портфолио === */
+.portfolio-modal .modal-content {
+  background-color: #10111F;
+  color: #CDC7B7;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.portfolio-modal .modal-header {
+  background-color: #748BBB;
+  color: #10111F;
+  font-weight: bold;
+  padding: 1rem 1.5rem;
+}
+
+.portfolio-modal .modal-footer {
+  background-color: #24252A;
+  border-top: none;
+}
+
+/* === Изображение в модальном окне === */
+.portfolio-modal img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.portfolio-modal img:hover {
+  transform: scale(1.02);
+}
+
+/* === Блок описания === */
+.portfolio-modal .bg-secondary-subtle {
+  background-color: #5C556C !important;
+  color: #cde1f5 !important;
+}
+
+/* === Кнопки навигации === */
+.prev-button,
+.next-button {
+  background-color: transparent;
+  border: 1px solid #748BBB;
+  color: #CDC7B7;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.prev-button:hover,
+.next-button:hover {
+  background-color: #748BBB;
+  color: #10111F;
+  border-color: #748BBB;
+}
+/* Модальное окно */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: translateY(-50px);
+  opacity: 0;
+}
+
+.modal.show .modal-dialog {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.modal.fade .modal-content {
+  transition: opacity 0.3s ease-out;
+  opacity: 0;
+}
+
+.modal.show .modal-content {
+  opacity: 1;
+}
+/* Стили для ссылок на детальные страницы */
+
+ a {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+.scroll-card-birzha .delete-button{
+margin-top: 10px !important;
+}

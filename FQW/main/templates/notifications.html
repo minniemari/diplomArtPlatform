@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Уведомления{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Ваши уведомления</h2>
+
+  {% if notifications %}
+    <ul class="list-group">
+      {% for notification in notifications %}
+        <li class="list-group-item d-flex justify-content-between align-items-start {% if not notification.is_read %}bg-dark text-light{% else %}bg-secondary text-muted{% endif %}">
+          <div>
+            {{ notification.message }}
+          </div>
+          <small>{{ notification.created_at|date:"d.m.Y H:i" }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Нет уведомлений.</p>
+  {% endif %}
+</div>
+{% endblock %}

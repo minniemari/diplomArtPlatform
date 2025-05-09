@@ -1,0 +1,10 @@
+.list-group-item {
+  background-color: #5C556C;
+  border: none;
+}
+.list-group-item small {
+  color: #CDC7B7;
+}
+.list-group-item:hover {
+  background-color: #748BBB !important;
+}

@@ -1,0 +1,63 @@
+body {
+    background-color: #10111F;
+    color: #CDC7B7;
+    font-family: 'Manrope', sans-serif;
+}
+
+.navbar-dark.bg-dark {
+    background-color: #5C556C !important;
+}
+
+.btn-outline-light {
+    border-color: #CDC7B7;
+    color: #CDC7B7;
+}
+
+.btn-outline-light:hover {
+    background-color: #748BBB;
+    color: #10111F;
+}
+
+.card.commission-card {
+    background-color: #5C556C;
+    color: #CDC7B7;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.commission-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #CDC7B7;
+}
+
+.card-text {
+    font-size: 0.95rem;
+    color: #EDE9DC;
+}
+
+.btn-commission {
+    background-color: #748BBB;
+    color: #10111F;
+    border: none;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.btn-commission:hover {
+    background-color: #82779F;
+    color: #fff;
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    object-position: center;
+    border-bottom: 1px solid #444;
+}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Избранное{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/favorites.css' %}">
+{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-5">Избранное</h2>
+
+  <!-- Избранные коммишки -->
+  <div class="mb-5">
+    <h3 class="mb-3">Коммишки</h3>
+    {% if favorites %}
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for fav in favorites %}
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              <img src="{{ fav.commission.image.url }}" class="card-img-top" alt="{{ fav.commission.title }}">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ fav.commission.title }}</h5>
+                <p class="card-text text-muted mb-3">
+                  {{ fav.commission.description|truncatechars:60 }}
+                </p>
+                <a href="{% url 'commission_detail' fav.commission.id %}" class="btn btn-primary mt-auto">Перейти к коммишке</a>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col">
+            <p class="text-muted">Нет избранных коммишек.</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted">У вас пока нет избранных коммишек.</p>
+    {% endif %}
+  </div>
+
+  <!-- Избранные художники -->
+  <div class="mb-5">
+    <h3 class="mb-3">Пользователи</h3>
+    {% if favorite_artists %}
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for fav in favorite_artists %}
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              <img src="{{ fav.artist.profile.image.url }}" class="card-artist-imgcard-artist-img" style="height: 250px; object-fit: cover;" alt="Аватар {{ fav.artist.username }}">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ fav.artist.username }}</h5>
+                <small class="text-muted mb-2">Рейтинг: {{ fav.artist.profile.ratings|default:"Нет" }}</small>
+                <p class="card-text text-truncate">{{ fav.artist.profile.description|default:"Без описания" }}</p>
+                <a href="{% url 'profile_detail' username=fav.artist.username %}" class="btn btn-outline-secondary mt-auto">Перейти к профилю</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted">Вы пока ничего не добавили в избранные художники.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

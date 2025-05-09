@@ -1,0 +1,78 @@
+/* === Общий стиль для контейнера заказов === */
+.my-orders-container {
+    background-color: #10111F;
+    color: #CDC7B7;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+}
+
+/* === Заголовки секций === */
+.my-orders-container h4 {
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #CDC7B7;
+}
+
+/* === Карточки заказов === */
+.card.shadow {
+    background-color: #5C556C;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-body {
+    color: #EDE9DC;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    color: #CDC7B7;
+    margin-bottom: 0.5rem;
+}
+
+/* === Статусы заказов === */
+.badge.bg-info {
+    background-color: #748BBB;
+    color: #10111F;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+.badge.bg-warning {
+    background-color: #CDC7B7;
+    color: #10111F;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+}
+
+/* === Кнопка "Подробнее" === */
+.btn-outline-primary {
+background-color: #748BBB;
+border-color: #748BBB;
+color: #10111F;
+font-size: 0.85rem;
+padding: 0.3rem 0.75rem;
+transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: #82779F;
+  border-color: #82779F;
+  color: #CDC7B7;
+}
+
+/* === Сообщение о пустом списке === */
+.row p {
+    color: #CDC7B7;
+    font-style: italic;
+}

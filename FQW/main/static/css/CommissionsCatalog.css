@@ -1,0 +1,111 @@
+.commissions-catalog {
+  background-color: #10111F;
+  padding: 2rem;
+}
+
+/* Карточки коммишек */
+.commissions-catalog .card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Основная информация */
+.commissions-catalog .card-body {
+  flex-grow: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+/* Выпадающие списки */
+.commissions-catalog select.form-select {
+  background-color: #5C556C;
+  color: #CDC7B7;
+  border-color: #748BBB;
+}
+
+.commissions-catalog select.form-select:focus {
+  box-shadow: 0 0 0 0.25rem rgba(116, 139, 187, 0.5);
+}
+
+/* Активный пункт списка */
+.commissions-catalog select.form-select option:checked {
+  background-color: #5C556C;
+  color: #CDC7B7;
+}
+/* Пагинация */
+.commissions-catalog .pagination .page-link {
+  color: #CDC7B7;
+  background-color: transparent;
+  border: 1px solid #748BBB;
+}
+
+.commissions-catalog .pagination .page-item.active .page-link{
+  z-index: 3;
+  color: #CDC7B7;
+  background-color: #5C556C;
+  border-color: #5C556C;
+}
+
+.commissions-catalog .pagination .page-link:hover {
+  color: #CDC7B7;
+  background-color: #748BBB;
+  border-color: #748BBB;
+}
+
+/* Кнопки */
+.commissions-catalog .btn-primary {
+  background-color: #748BBB;
+  border-color: #748BBB;
+  color: #10111F;
+  height: 40px;
+  margin-top: auto;
+  align-self: flex-end;
+}
+
+.commissions-catalog .btn-primary:hover {
+  background-color: #82779F;
+  border-color: #82779F;
+  color: #CDC7B7;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+/* Селектор сортировки */
+.sort-selector {
+    max-width: 200px; /* Установите нужную ширину */
+    height: 40px; /* Соответствует высоте кнопки */
+}
+
+/* Кнопка создания коммишки */
+.btn-create-commission {
+    background-color: transparent;
+    color: #CDC7B7;
+    border: 2px solid #748BBB;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    margin-top: 32px;
+    transition: all 0.3s ease;
+    height: 40px; /* Соответствует высоте селектора */
+    line-height: normal; /* Для корректного центрирования текста */
+}
+
+.btn-create-commission:hover {
+    background-color: #748BBB;
+    color: #10111F;
+    border-color: #748BBB;
+    transform: scale(1.05);
+}
+
+.btn-create-commission i {
+    font-size: 1.2rem;
+}

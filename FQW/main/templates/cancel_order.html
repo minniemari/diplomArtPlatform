@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Отмена заказа</h2>
+<form method="post" action="{% url 'cancel_order' order.id %}">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label class="form-label">Причина отмены</label>
+        <select name="reason" class="form-select" required>
+            <option value="style">Не устраивает стиль исполнения</option>
+            <option value="tz">Не соблюдение ТЗ</option>
+            <option value="other">Другое</option>
+        </select>
+    </div>
+    <div class="mb-3" id="otherReasonField" style="display: none;">
+        <label class="form-label">Уточнение</label>
+        <textarea name="other_reason" class="form-control" rows="2"></textarea>
+    </div>
+    <button type="submit" class="btn btn-danger">Подтвердить отмену</button>
+</form>
+
+<script>
+document.querySelector('select[name="reason"]').addEventListener('change', function() {
+    const otherField = document.getElementById('otherReasonField');
+    otherField.style.display = this.value === 'other' ? 'block' : 'none';
+});
+</script>
+{% endblock %}
